@@ -1,0 +1,5 @@
+{
+  "name": "malformed-bundle",
+  "version": "1.0.0",
+  "dsh": { "bundle": "not-an-object" }
+}

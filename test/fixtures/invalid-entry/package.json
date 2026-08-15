@@ -1,0 +1,6 @@
+{
+  "name": "invalid-entry",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "../safe-bundle/index.js"
+}

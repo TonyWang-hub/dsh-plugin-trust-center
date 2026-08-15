@@ -1,0 +1,5 @@
+{
+  "name": "missing-client-export",
+  "version": "1.0.0",
+  "dsh": { "client": { "platform": "node" } }
+}

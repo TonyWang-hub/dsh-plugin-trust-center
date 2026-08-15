@@ -1,0 +1,9 @@
+{
+  "name": "client-bundle",
+  "version": "1.0.0",
+  "exports": { "./client": "./client.js" },
+  "dsh": {
+    "client": { "platform": "node", "inject": ["index.js"], "immediately": true },
+    "profile": { "bundles": ["cordis.patch.yml"] }
+  }
+}

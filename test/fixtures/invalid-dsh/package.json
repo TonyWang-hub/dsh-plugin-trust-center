@@ -1,0 +1,5 @@
+{
+  "name": "invalid-dsh",
+  "version": "1.0.0",
+  "dsh": "not-an-object"
+}

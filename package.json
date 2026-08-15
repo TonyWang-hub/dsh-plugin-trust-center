@@ -1,0 +1,56 @@
+{
+  "name": "dsh-plugin-trust-center",
+  "version": "0.1.0",
+  "description": "Evidence-first inspection, compatibility verification, and quarantine tooling for DeepSeek Harness plugins.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "TonyWang-hub",
+  "repository": "github:TonyWang-hub/dsh-plugin-trust-center",
+  "homepage": "https://tonywang-hub.github.io/dsh-plugin-trust-center/",
+  "bugs": "https://github.com/TonyWang-hub/dsh-plugin-trust-center/issues",
+  "engines": {
+    "node": ">=24.17.0 <25"
+  },
+  "bin": {
+    "dsh-trust": "./dist/cli.js"
+  },
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./schema": "./schemas/passport.schema.json"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.map",
+    "schemas/*.json",
+    "CHANGELOG.md",
+    "README.md",
+    "SECURITY.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "oxlint src test",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepack": "pnpm build"
+  },
+  "dependencies": {
+    "tar": "7.5.22",
+    "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "ajv": "8.20.0",
+    "oxlint": "1.78.0",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  },
+  "packageManager": "pnpm@11.21.0"
+}

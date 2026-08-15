@@ -1,0 +1,9 @@
+{
+  "name": "invalid-profile",
+  "version": "1.0.0",
+  "dsh": {
+    "profile": {
+      "bundles": "not-an-array"
+    }
+  }
+}

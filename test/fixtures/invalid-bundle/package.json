@@ -1,0 +1,5 @@
+{
+  "name": "invalid-bundle",
+  "version": "1.0.0",
+  "dsh": { "bundle": { "patch": "../escape.patch" } }
+}

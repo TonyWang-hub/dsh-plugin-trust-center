@@ -1,0 +1,5 @@
+{
+  "name": "missing-patch-bundle",
+  "version": "1.0.0",
+  "dsh": { "bundle": { "patch": "cordis.patch.yml" } }
+}

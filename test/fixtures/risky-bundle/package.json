@@ -1,0 +1,7 @@
+{
+  "name": "risky-bundle",
+  "version": "1.0.0",
+  "scripts": { "install": "node install.js" },
+  "dependencies": { "unpinned-dep": "github:someone/dep" },
+  "dsh": { "bundle": { "patch": "cordis.patch.yml" } }
+}

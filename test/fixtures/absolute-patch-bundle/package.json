@@ -1,0 +1,5 @@
+{
+  "name": "absolute-patch-bundle",
+  "version": "1.0.0",
+  "dsh": { "bundle": { "patch": "/etc/passwd" } }
+}

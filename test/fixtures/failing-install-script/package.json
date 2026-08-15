@@ -1,0 +1,7 @@
+{
+  "name": "failing-install-script",
+  "version": "1.0.0",
+  "scripts": {
+    "install": "node -e \"process.exit(99)\""
+  }
+}

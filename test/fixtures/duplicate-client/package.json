@@ -1,0 +1,13 @@
+{
+  "name": "duplicate-client",
+  "version": "1.0.0",
+  "exports": {
+    "./client": "./index.js"
+  },
+  "dsh": {
+    "client": {
+      "platform": "node",
+      "inject": ["index.js", "index.js"]
+    }
+  }
+}
