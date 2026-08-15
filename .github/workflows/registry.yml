@@ -1,0 +1,53 @@
+name: Registry
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+# GitHub permissions are job-scoped; write is used only by the final generated-branch push.
+permissions:
+  contents: write
+
+concurrency:
+  group: registry-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.21.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.17.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm registry:build
+      - run: pnpm site:check
+      - name: Publish deterministic registry branch
+        run: |
+          cp -R public "$RUNNER_TEMP/registry-public"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          if git ls-remote --exit-code --heads origin registry-data >/dev/null; then
+            git fetch origin registry-data
+            git checkout -B registry-data FETCH_HEAD
+          else
+            git checkout --orphan registry-data
+            git rm -rf .
+          fi
+          rm -rf public
+          mkdir public
+          cp -R "$RUNNER_TEMP/registry-public/." public/
+          git add -A public
+          if git diff --cached --quiet; then
+            echo "Registry evidence is unchanged"
+          else
+            git commit -m "chore: refresh registry evidence"
+            git push origin HEAD:registry-data
+          fi

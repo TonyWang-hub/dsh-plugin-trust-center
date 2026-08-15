@@ -1,0 +1,117 @@
+[
+  {
+    "slug": "z-orphan",
+    "name": "Orphan Repo",
+    "description": "A repository that could not be inspected.",
+    "category": "misc",
+    "source": "github:example/orphan-repo",
+    "sourceKind": "github",
+    "status": "unavailable",
+    "declarationTypes": [],
+    "testedDshVersions": [],
+    "findings": []
+  },
+  {
+    "slug": "logger-probe",
+    "name": "Logger Probe",
+    "description": "Collects structured logs for the host.",
+    "category": "logging",
+    "source": "npm:logger-probe@1.2.3",
+    "sourceKind": "npm",
+    "revision": "1.2.3",
+    "status": "candidate",
+    "verdict": "review",
+    "digest": "1111111111111111111111111111111111111111111111111111111111111111",
+    "declarationTypes": ["client"],
+    "testedDshVersions": ["0.5.0", "0.6.0"],
+    "findings": [
+      {
+        "ruleId": "DSH-SCRIPT-001",
+        "severity": "high",
+        "category": "lifecycle",
+        "title": "Lifecycle script detected",
+        "message": "The package declares an install script.",
+        "evidence": [
+          {
+            "file": "package.json",
+            "line": 7,
+            "snippet": "\"postinstall\": \"node bin/setup.js\""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "native-bind",
+    "name": "Native Bind",
+    "description": "Binds a native addon into the host.",
+    "category": "native",
+    "source": "github:example/native-bind#main",
+    "sourceKind": "github",
+    "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "status": "incompatible",
+    "verdict": "fail",
+    "digest": "2222222222222222222222222222222222222222222222222222222222222222",
+    "declarationTypes": ["bundle", "profile"],
+    "testedDshVersions": ["0.4.0"],
+    "findings": [
+      {
+        "ruleId": "DSH-CODE-002",
+        "severity": "critical",
+        "category": "code",
+        "title": "Native addon binary",
+        "message": "The package ships a prebuilt native module.",
+        "evidence": [
+          {
+            "file": "addon.node",
+            "snippet": "binary"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "xss-decoy",
+    "name": "<script>alert(1)</script> & \"quoted\"",
+    "description": "Description with </script><script> tags and <b>markup</b>.",
+    "category": "markup",
+    "source": "local:./xss-decoy",
+    "sourceKind": "local",
+    "status": "verified-package",
+    "verdict": "review",
+    "digest": "3333333333333333333333333333333333333333333333333333333333333333",
+    "declarationTypes": ["bundle"],
+    "testedDshVersions": ["0.5.0"],
+    "findings": [
+      {
+        "ruleId": "DSH-META-001",
+        "severity": "high",
+        "category": "manifest",
+        "title": "Tricky finding <em>title</em>",
+        "message": "Message with \"quotes\" and <angle> brackets & ampersands.",
+        "evidence": [
+          {
+            "file": "readme.md",
+            "line": 3,
+            "snippet": "line & <content>"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "safe-cache",
+    "name": "Safe Cache",
+    "description": "A small in-memory cache with no lifecycle scripts.",
+    "category": "cache",
+    "source": "github:example/safe-cache",
+    "sourceKind": "github",
+    "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "status": "verified-package",
+    "verdict": "pass",
+    "digest": "4444444444444444444444444444444444444444444444444444444444444444",
+    "declarationTypes": ["bundle"],
+    "testedDshVersions": ["0.5.0", "0.6.0"],
+    "findings": []
+  }
+]

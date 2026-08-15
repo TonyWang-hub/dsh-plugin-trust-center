@@ -19,7 +19,7 @@ Network sources are resolved before inspection: npm metadata records an exact pu
 Download the `.tgz` and `SHA256SUMS.txt` assets from the matching [GitHub Release](https://github.com/TonyWang-hub/dsh-plugin-trust-center/releases), verify the checksum, then run:
 
 ```bash
-npm exec --package ./dsh-plugin-trust-center-0.1.0.tgz -- dsh-trust inspect ./my-plugin
+npm exec --package ./dsh-plugin-trust-center-0.2.0.tgz -- dsh-trust inspect ./my-plugin
 ```
 
 ### Run from source
@@ -63,6 +63,28 @@ process.stdout.write(renderJson(passport))
 
 The Passport includes normalized DSH declarations, install scripts, direct dependency evidence, stable findings, a deterministic package digest, and a CycloneDX 1.6 direct-dependency SBOM. Published evidence omits temporary absolute paths and timestamps.
 
+## Stage 2: Community Registry
+
+The [public evidence site](https://tonywang-hub.github.io/dsh-plugin-trust-center/) is generated from immutable declarations in [`registry/sources.json`](registry/sources.json). It provides searchable no-JavaScript-compatible plugin pages, canonical JSON reports, SVG badges, Shields endpoint JSON, immutable source links, tested DSH versions, and finding evidence.
+
+Each generated record includes deterministic maintenance coordinates (`provider`, namespace, project, and immutable revision) derived from its reviewed GitHub/npm source. Mutable popularity scores and subjective rankings are intentionally excluded so repeated builds remain reproducible.
+
+Registry labels deliberately avoid the word “safe”:
+
+- `verified-package`: static inspection produced a `pass` Passport;
+- `candidate`: static inspection produced a `review` Passport;
+- `incompatible`: static inspection produced a `fail` Passport;
+- `unavailable`: acquisition or inspection could not produce a Passport.
+
+Build and verify a byte-stable snapshot locally:
+
+```bash
+pnpm registry:build
+pnpm site:check
+```
+
+Scheduled/manual GitHub Actions publish generated content to the `registry-data` branch and deploy that branch through GitHub Pages. Collection never imports target modules or runs their lifecycle scripts. Submission and rule-governance requirements are documented in [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/rules.md`](docs/rules.md).
+
 ## Verdict model
 
 - `fail`: at least one critical structural finding, including an invalid manifest, escaping/missing/invalid Cordis patch, invalid client/profile declaration, no DSH declaration, or an incomplete scan caused by limits or links;
@@ -74,7 +96,7 @@ Use `dsh-trust rules` for machine-readable rule metadata. Rule findings report o
 ## Delivery stages
 
 1. **Plugin Passport CLI** — implemented in `v0.1.0`.
-2. **Community Registry** — GitHub Actions + Pages reports, badges, and contribution rules.
+2. **Community Registry** — implemented in `v0.2.0` with GitHub Actions, Pages reports, badges, and contribution rules.
 3. **DSH integration** — external bundle, quarantine profiles, snapshots, disable, and rollback.
 
 Specifications live in [`docs/specs`](docs/specs). The security boundary and explicit non-goals are documented in [`docs/threat-model.md`](docs/threat-model.md).

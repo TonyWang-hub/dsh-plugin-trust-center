@@ -20,7 +20,7 @@ Each generated record contains:
 - Latest Passport and digest.
 - Historical report references retained by release or commit.
 - Evidence status and tested DSH versions.
-- Maintenance metadata derived from GitHub/npm without subjective ranking.
+- Deterministic maintenance coordinates derived from GitHub/npm (`provider`, namespace, project, and immutable revision) without subjective ranking or mutable popularity scores.
 
 The registry distinguishes `verified-package`, `candidate`, and `incompatible`; it does not label packages `safe`.
 

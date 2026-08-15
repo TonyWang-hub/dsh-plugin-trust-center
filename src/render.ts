@@ -1,7 +1,9 @@
+import { createRequire } from 'node:module'
 import type { Finding, Passport } from './model.js'
 import { canonicalJson } from './passport.js'
 
 const MAX_HUMAN_FINDINGS = 100
+const PACKAGE_VERSION = (createRequire(import.meta.url)('../package.json') as { version: string }).version
 
 export function renderJson(passport: Passport): string {
   return `${canonicalJson(passport)}\n`
@@ -61,7 +63,7 @@ export function renderSarif(passport: Passport): string {
     $schema: 'https://json.schemastore.org/sarif-2.1.0.json',
     version: '2.1.0',
     runs: [{
-      tool: { driver: { name: 'DSH Plugin Trust Center', version: '0.1.0', rules } },
+      tool: { driver: { name: 'DSH Plugin Trust Center', version: PACKAGE_VERSION, rules } },
       results,
     }],
   })}\n`

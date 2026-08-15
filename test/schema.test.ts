@@ -30,6 +30,19 @@ describe('Passport JSON Schema', () => {
     }
   })
 
+  it('exports every published schema from the package', async () => {
+    const manifest = JSON.parse(await readFile('package.json', 'utf8')) as {
+      exports: Record<string, unknown>
+    }
+
+    expect(manifest.exports).toMatchObject({
+      './schema': './schemas/passport.schema.json',
+      './schema/passport': './schemas/passport.schema.json',
+      './schema/registry-source': './schemas/registry-source.schema.json',
+      './schema/registry-report': './schemas/registry-report.schema.json',
+    })
+  })
+
   it('publishes a stable identity and version', async () => {
     const document = await schema()
 

@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-trust-center",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Evidence-first inspection, compatibility verification, and quarantine tooling for DeepSeek Harness plugins.",
   "type": "module",
   "license": "Apache-2.0",
@@ -20,13 +20,19 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./schema": "./schemas/passport.schema.json"
+    "./schema": "./schemas/passport.schema.json",
+    "./schema/passport": "./schemas/passport.schema.json",
+    "./schema/registry-source": "./schemas/registry-source.schema.json",
+    "./schema/registry-report": "./schemas/registry-report.schema.json"
   },
   "files": [
     "dist/**/*.js",
     "dist/**/*.d.ts",
     "dist/**/*.map",
     "schemas/*.json",
+    "registry/sources.json",
+    "site/*",
+    "docs/rules.md",
     "CHANGELOG.md",
     "README.md",
     "SECURITY.md",
@@ -39,15 +45,17 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "registry:build": "pnpm build && node dist/registry/build.js",
+    "site:check": "node dist/site/check.js public",
     "prepack": "pnpm build"
   },
   "dependencies": {
+    "ajv": "8.20.0",
     "tar": "7.5.22",
     "yaml": "2.9.0"
   },
   "devDependencies": {
     "@types/node": "24.13.3",
-    "ajv": "8.20.0",
     "oxlint": "1.78.0",
     "typescript": "7.0.2",
     "vitest": "4.1.10"

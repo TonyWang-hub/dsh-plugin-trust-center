@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 11.21.0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24.17.0
           cache: pnpm
@@ -28,10 +28,15 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - run: pnpm registry:build
+      - run: pnpm site:check
       - name: Package release assets
         run: |
           mkdir -p release
           pnpm pack --pack-destination release
+          version="${GITHUB_REF_NAME#v}"
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
+            -czf "release/registry-snapshot-$version.tgz" public registry/sources.json
           cp schemas/*.json release/
           cd release
           sha256sum *.tgz *.json > SHA256SUMS.txt

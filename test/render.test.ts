@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import { describe, expect, it } from 'vitest'
 import { inspectSource } from '../src/index.js'
 import { renderHuman, renderJson, renderSarif } from '../src/render.js'
@@ -26,7 +27,9 @@ describe('Passport renderers', () => {
     const sarif = JSON.parse(renderSarif(passport))
 
     expect(sarif.version).toBe('2.1.0')
+    const manifest = JSON.parse(await readFile('package.json', 'utf8')) as { version: string }
     expect(sarif.runs[0].tool.driver.name).toBe('DSH Plugin Trust Center')
+    expect(sarif.runs[0].tool.driver.version).toBe(manifest.version)
     expect(sarif.runs[0].results).toEqual(expect.arrayContaining([
       expect.objectContaining({ ruleId: 'DSH-SCRIPT-001', level: 'warning' }),
     ]))

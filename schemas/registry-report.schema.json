@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tonywang-hub.github.io/dsh-plugin-trust-center/schemas/registry-report.schema.json",
+  "title": "DSH Community Registry Report 1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["slug", "source", "maintenance", "status", "testedDshVersions"],
+  "properties": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 64
+    },
+    "source": { "type": "string", "minLength": 1 },
+    "maintenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "project"],
+      "properties": {
+        "provider": { "enum": ["github", "npm", "local"] },
+        "namespace": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "project": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "revision": { "type": "string", "minLength": 1, "maxLength": 200 }
+      }
+    },
+    "status": {
+      "enum": ["verified-package", "candidate", "incompatible", "unavailable"]
+    },
+    "testedDshVersions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$"
+      }
+    },
+    "resolved": { "type": "string", "minLength": 1 },
+    "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "passport": {
+      "$ref": "https://tonywang-hub.github.io/dsh-plugin-trust-center/schemas/passport.schema.json"
+    },
+    "error": { "type": "string", "minLength": 1, "maxLength": 1000 }
+  },
+  "oneOf": [
+    {
+      "properties": { "status": { "const": "unavailable" } },
+      "required": ["error"],
+      "not": {
+        "anyOf": [
+          { "required": ["resolved"] },
+          { "required": ["digest"] },
+          { "required": ["passport"] }
+        ]
+      }
+    },
+    {
+      "properties": {
+        "status": {
+          "enum": ["verified-package", "candidate", "incompatible"]
+        }
+      },
+      "required": ["resolved", "digest", "passport"],
+      "not": { "required": ["error"] }
+    }
+  ]
+}

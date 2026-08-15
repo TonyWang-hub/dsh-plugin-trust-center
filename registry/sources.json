@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "sources": [
+    {
+      "slug": "deepseek-ai-dsh-base",
+      "source": "npm:@deepseek-ai/dsh-base@0.0.1-rc.1",
+      "name": "@deepseek-ai/dsh-base",
+      "description": "The published base DSH bundle inspected at an exact npm version.",
+      "category": "base-bundle",
+      "testedDshVersions": ["0.0.1-rc.1"]
+    },
+    {
+      "slug": "dsh-plugin-sentinel",
+      "source": "github:BotonJ/dsh-plugin-sentinel#3dcff7a125d7151f2b75a8962c65425d0d9aa0b8",
+      "name": "DSH Plugin Sentinel",
+      "description": "A community DSH plugin inspected at an immutable GitHub commit.",
+      "category": "security-observability",
+      "testedDshVersions": []
+    }
+  ]
+}

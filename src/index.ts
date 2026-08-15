@@ -42,3 +42,14 @@ export type {
 } from './model.js'
 
 export { PASSPORT_SCHEMA_VERSION } from './model.js'
+
+export { buildRegistry } from './registry/build.js'
+export type { BuildRegistryOptions, BuildRegistryResult } from './registry/build.js'
+export { collectRegistry } from './registry/collect.js'
+export type { CollectOptions, RegistryMaintenance, RegistryReport, RegistryStatus } from './registry/collect.js'
+export { loadRegistrySources } from './registry/load.js'
+export type { RegistryDocument, RegistrySource } from './registry/model.js'
+export { buildSite } from './site/generate.js'
+export type { BuildSiteOptions, RegistryEntry, RegistryFinding } from './site/generate.js'
+export { checkSite } from './site/check.js'
+export type { SiteCheckResult } from './site/check.js'
