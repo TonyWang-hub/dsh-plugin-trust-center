@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSH Plugin Sentinel — evidence</title>
+<meta name="description" content="Automated inspection evidence for dsh-plugin-sentinel: status candidate, verdict review.">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+<p class="site-name"><a href="../index.html">DSH Plugin Trust Center</a></p>
+<nav aria-label="Primary">
+<a href="../index.html">Registry</a>
+</nav>
+</header>
+<main id="main">
+<h1>DSH Plugin Sentinel</h1>
+<p class="plugin-subtitle"><code>dsh-plugin-sentinel</code> · <span class="status">candidate</span> · verdict <span class="verdict verdict-review">review</span></p>
+<p class="disclaimer">This page is automated evidence, not an endorsement. It does not guarantee that this plugin is safe.</p>
+<p class="badge-note"><img class="badge" src="../badges/dsh-plugin-sentinel.svg" alt="Trust badge for dsh-plugin-sentinel: review"></p>
+<section aria-labelledby="evidence-heading">
+<h2 id="evidence-heading">Evidence</h2>
+<dl class="evidence">
+<div><dt>Digest</dt><dd><code>sha256:c1c4b47540d547fc15b16c2b05d3889d99522f8bbdadd9b8ea1a12d2f4272be5</code></dd></div>
+<div><dt>Source</dt><dd><a href="https://github.com/BotonJ/dsh-plugin-sentinel" rel="noopener noreferrer">https://github.com/BotonJ/dsh-plugin-sentinel</a></dd></div>
+<div><dt>Maintenance coordinates</dt><dd><code>github:BotonJ/dsh-plugin-sentinel@3dcff7a125d7151f2b75a8962c65425d0d9aa0b8</code></dd></div>
+<div><dt>Immutable revision</dt><dd><a href="https://github.com/BotonJ/dsh-plugin-sentinel/tree/3dcff7a125d7151f2b75a8962c65425d0d9aa0b8" rel="noopener noreferrer">https://github.com/BotonJ/dsh-plugin-sentinel/tree/3dcff7a125d7151f2b75a8962c65425d0d9aa0b8</a></dd></div>
+<div><dt>Tested DSH versions</dt><dd>None declared</dd></div>
+<div><dt>Canonical report</dt><dd><a href="../reports/dsh-plugin-sentinel.json" download>reports/dsh-plugin-sentinel.json (JSON)</a></dd></div>
+</dl>
+</section>
+<section aria-labelledby="findings-heading">
+<h2 id="findings-heading">Findings</h2>
+<ul class="findings"><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-001</code> Dynamic code execution — Source contains dynamic code execution (eval, new Function, or node:vm). <span class="finding-evidence">at src/rules.js:48</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-001</code> Dynamic code execution — Source contains dynamic code execution (eval, new Function, or node:vm). <span class="finding-evidence">at test/fixtures/comment-fp/index.js:6</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-001</code> Dynamic code execution — Source contains dynamic code execution (eval, new Function, or node:vm). <span class="finding-evidence">at test/fixtures/obfuscated/index.js:5</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-001</code> Dynamic code execution — Source contains dynamic code execution (eval, new Function, or node:vm). <span class="finding-evidence">at test/scanner.test.js:21</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-002</code> Process execution — Source invokes child processes or a shell. <span class="finding-evidence">at src/rules.js:40</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-002</code> Process execution — Source invokes child processes or a shell. <span class="finding-evidence">at test/audit.test.js:69</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-002</code> Process execution — Source invokes child processes or a shell. <span class="finding-evidence">at test/fixtures/comment-fp/index.js:7</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-002</code> Process execution — Source invokes child processes or a shell. <span class="finding-evidence">at test/fixtures/shell-rm/index.js:1</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-002</code> Process execution — Source invokes child processes or a shell. <span class="finding-evidence">at test/scanner.test.js:87</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-003</code> Environment or credential access — Source reads environment variables or references credential material. <span class="finding-evidence">at src/audit.js:333</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-003</code> Environment or credential access — Source reads environment variables or references credential material. <span class="finding-evidence">at src/rules.js:79</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-003</code> Environment or credential access — Source reads environment variables or references credential material. <span class="finding-evidence">at test/audit.test.js:35</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-003</code> Environment or credential access — Source reads environment variables or references credential material. <span class="finding-evidence">at test/fixtures/comment-fp/index.js:18</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-003</code> Environment or credential access — Source reads environment variables or references credential material. <span class="finding-evidence">at test/fixtures/exfil-skin/scripts/telemetry.js:8</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-003</code> Environment or credential access — Source reads environment variables or references credential material. <span class="finding-evidence">at test/index.test.js:18</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-003</code> Environment or credential access — Source reads environment variables or references credential material. <span class="finding-evidence">at test/scanner.test.js:35</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-004</code> Network access — Source performs network I/O. <span class="finding-evidence">at src/rules.js:86</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-004</code> Network access — Source performs network I/O. <span class="finding-evidence">at test/audit.test.js:158</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-004</code> Network access — Source performs network I/O. <span class="finding-evidence">at test/fixtures/comment-fp/index.js:8</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-004</code> Network access — Source performs network I/O. <span class="finding-evidence">at test/fixtures/exfil-skin/scripts/telemetry.js:12</span></li><li class="finding finding-high"><strong class="finding-severity">high</strong> <code>DSH-CODE-004</code> Network access — Source performs network I/O. <span class="finding-evidence">at test/scanner.test.js:22</span></li></ul>
+</section>
+</main>
+<footer class="site-footer">
+<p>Automated evidence, not an endorsement. This site is generated from static inspection reports and does not guarantee the safety of any plugin.</p>
+</footer>
+</body>
+</html>

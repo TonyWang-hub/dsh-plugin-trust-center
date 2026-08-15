@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tonywang-hub.github.io/dsh-plugin-trust-center/schemas/passport.schema.json",
+  "title": "DSH Plugin Passport 1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "subject",
+    "dsh",
+    "scripts",
+    "dependencies",
+    "findings",
+    "sbom",
+    "compatibility",
+    "verdict"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "subject": { "$ref": "#/$defs/subject" },
+    "dsh": { "$ref": "#/$defs/dsh" },
+    "scripts": { "$ref": "#/$defs/stringMap" },
+    "dependencies": { "$ref": "#/$defs/dependencies" },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/finding" }
+    },
+    "sbom": { "$ref": "#/$defs/sbom" },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "dynamicImportVerified"],
+      "properties": {
+        "method": { "const": "declaration-only" },
+        "dynamicImportVerified": { "const": false }
+      }
+    },
+    "verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": { "enum": ["pass", "review", "fail"] }
+      }
+    }
+  },
+  "$defs": {
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "source", "resolved", "digest"],
+      "properties": {
+        "kind": { "enum": ["local", "npm", "github"] },
+        "source": { "type": "string", "minLength": 1 },
+        "resolved": {
+          "type": "string",
+          "pattern": "^(?:local:[^/\\\\]+|npm:.+|github:[^/]+/[^#]+#[0-9a-fA-F]{40})$"
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "stringMap": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime", "dev", "optional", "peer"],
+      "properties": {
+        "runtime": { "$ref": "#/$defs/stringMap" },
+        "dev": { "$ref": "#/$defs/stringMap" },
+        "optional": { "$ref": "#/$defs/stringMap" },
+        "peer": { "$ref": "#/$defs/stringMap" }
+      }
+    },
+    "dsh": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bundle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["patch", "exists"],
+          "properties": {
+            "patch": { "type": "string", "minLength": 1 },
+            "exists": { "type": "boolean" }
+          }
+        },
+        "client": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["platform", "exportExists"],
+          "properties": {
+            "platform": { "type": "string", "minLength": 1 },
+            "inject": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "immediately": { "type": "boolean" },
+            "exportExists": { "type": "boolean" }
+          }
+        },
+        "profile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["bundles"],
+          "properties": {
+            "bundles": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "line": { "type": "integer", "minimum": 1 },
+        "column": { "type": "integer", "minimum": 1 },
+        "snippet": { "type": "string", "maxLength": 120 }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ruleId", "severity", "category", "title", "message", "evidence", "remediation"],
+      "properties": {
+        "ruleId": { "type": "string", "pattern": "^DSH-[A-Z]+-[0-9]{3}$" },
+        "severity": { "enum": ["critical", "high"] },
+        "category": { "enum": ["manifest", "lifecycle", "code", "dependency"] },
+        "title": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "evidence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidence" }
+        },
+        "remediation": { "type": "string", "minLength": 1 }
+      }
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "name"],
+      "properties": {
+        "type": { "enum": ["library", "application"] },
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "scope": { "enum": ["required", "optional", "excluded"] },
+        "purl": { "type": "string", "minLength": 1 }
+      }
+    },
+    "sbom": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bomFormat", "specVersion", "version", "metadata", "components", "dependencies"],
+      "properties": {
+        "bomFormat": { "const": "CycloneDX" },
+        "specVersion": { "const": "1.6" },
+        "version": { "const": 1 },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "component": { "$ref": "#/$defs/component" }
+          }
+        },
+        "components": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/component" }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["ref", "dependsOn"],
+            "properties": {
+              "ref": { "type": "string", "minLength": 1 },
+              "dependsOn": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

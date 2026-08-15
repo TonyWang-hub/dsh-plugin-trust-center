@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSH Plugin Trust Center — Registry</title>
+<meta name="description" content="Automated evidence for DSH plugins: verdicts, digests, and findings. Reports are evidence, not endorsements.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+<p class="site-name"><a href="index.html">DSH Plugin Trust Center</a></p>
+<nav aria-label="Primary">
+<a href="index.html">Registry</a>
+</nav>
+</header>
+<main id="main">
+<h1>Plugin registry</h1>
+<p class="disclaimer">The reports behind this site are automated evidence produced by static inspection. They are not endorsements and do not guarantee that any plugin is safe.</p>
+<section class="filters" aria-labelledby="filters-heading"><h2 id="filters-heading">Filter plugins</h2><div class="filter-grid"><div class="filter"><label for="filter-name">Search</label><input id="filter-name" name="name" type="search" placeholder="Name or description" autocomplete="off"></div><div class="filter"><label for="filter-category">Category</label><select id="filter-category" name="category"><option value="">All</option><option value="base-bundle">base-bundle</option><option value="security-observability">security-observability</option></select></div><div class="filter"><label for="filter-declaration">Declaration type</label><select id="filter-declaration" name="declaration"><option value="">All</option><option value="bundle">bundle</option></select></div><div class="filter"><label for="filter-verdict">Verdict</label><select id="filter-verdict" name="verdict"><option value="">All</option><option value="pass">pass</option><option value="review">review</option></select></div><div class="filter"><label for="filter-severity">Severity</label><select id="filter-severity" name="severity"><option value="">All</option><option value="high">high</option></select></div><div class="filter"><label for="filter-source">Source kind</label><select id="filter-source" name="source"><option value="">All</option><option value="github">github</option><option value="npm">npm</option></select></div><div class="filter"><label for="filter-version">Tested DSH version</label><select id="filter-version" name="version"><option value="">All</option><option value="0.0.1-rc.1">0.0.1-rc.1</option></select></div><div class="filter"><button type="button" id="filter-reset">Reset filters</button></div></div></section>
+<p id="results-count" aria-live="polite">Showing all 2 plugins</p>
+<ul id="plugin-list" class="plugin-list"><li class="plugin" data-slug="deepseek-ai-dsh-base"><article><h2 class="plugin-name"><a href="detail/deepseek-ai-dsh-base.html">@deepseek-ai/dsh-base</a></h2><p class="plugin-description">The published base DSH bundle inspected at an exact npm version.</p><dl class="plugin-meta"><div><dt>Category</dt><dd>base-bundle</dd></div><div><dt>Status</dt><dd>verified-package</dd></div><div><dt>Verdict</dt><dd>pass</dd></div><div><dt>Source</dt><dd>npm</dd></div><div><dt>Tested DSH</dt><dd>0.0.1-rc.1</dd></div></dl><p class="plugin-links"><a href="detail/deepseek-ai-dsh-base.html">View evidence</a> · <a href="reports/deepseek-ai-dsh-base.json">Report (JSON)</a></p></article></li><li class="plugin" data-slug="dsh-plugin-sentinel"><article><h2 class="plugin-name"><a href="detail/dsh-plugin-sentinel.html">DSH Plugin Sentinel</a></h2><p class="plugin-description">A community DSH plugin inspected at an immutable GitHub commit.</p><dl class="plugin-meta"><div><dt>Category</dt><dd>security-observability</dd></div><div><dt>Status</dt><dd>candidate</dd></div><div><dt>Verdict</dt><dd>review</dd></div><div><dt>Source</dt><dd>github</dd></div><div><dt>Tested DSH</dt><dd>None declared</dd></div></dl><p class="plugin-links"><a href="detail/dsh-plugin-sentinel.html">View evidence</a> · <a href="reports/dsh-plugin-sentinel.json">Report (JSON)</a></p></article></li></ul>
+<script type="application/json" id="trust-registry-data">{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "slug": "deepseek-ai-dsh-base",
+      "name": "@deepseek-ai/dsh-base",
+      "description": "The published base DSH bundle inspected at an exact npm version.",
+      "category": "base-bundle",
+      "source": "npm:@deepseek-ai/dsh-base@0.0.1-rc.1",
+      "sourceKind": "npm",
+      "maintenance": {
+        "provider": "npm",
+        "namespace": "@deepseek-ai",
+        "project": "dsh-base",
+        "revision": "0.0.1-rc.1"
+      },
+      "revision": "0.0.1-rc.1",
+      "status": "verified-package",
+      "verdict": "pass",
+      "digest": "2e5c597129cba417e0f2d69180c57062bb0a37fa91b3dcc8c8f340d06ea1f54e",
+      "declarationTypes": [
+        "bundle"
+      ],
+      "testedDshVersions": [
+        "0.0.1-rc.1"
+      ],
+      "reportPath": "reports/deepseek-ai-dsh-base.json",
+      "detailPath": "detail/deepseek-ai-dsh-base.html"
+    },
+    {
+      "slug": "dsh-plugin-sentinel",
+      "name": "DSH Plugin Sentinel",
+      "description": "A community DSH plugin inspected at an immutable GitHub commit.",
+      "category": "security-observability",
+      "source": "github:BotonJ/dsh-plugin-sentinel#3dcff7a125d7151f2b75a8962c65425d0d9aa0b8",
+      "sourceKind": "github",
+      "maintenance": {
+        "provider": "github",
+        "namespace": "BotonJ",
+        "project": "dsh-plugin-sentinel",
+        "revision": "3dcff7a125d7151f2b75a8962c65425d0d9aa0b8"
+      },
+      "revision": "3dcff7a125d7151f2b75a8962c65425d0d9aa0b8",
+      "status": "candidate",
+      "verdict": "review",
+      "digest": "c1c4b47540d547fc15b16c2b05d3889d99522f8bbdadd9b8ea1a12d2f4272be5",
+      "declarationTypes": [
+        "bundle"
+      ],
+      "severity": "high",
+      "testedDshVersions": [],
+      "reportPath": "reports/dsh-plugin-sentinel.json",
+      "detailPath": "detail/dsh-plugin-sentinel.html"
+    }
+  ]
+}</script>
+<script src="filter.js" defer></script>
+</main>
+<footer class="site-footer">
+<p>Automated evidence, not an endorsement. This site is generated from static inspection reports and does not guarantee the safety of any plugin.</p>
+</footer>
+</body>
+</html>

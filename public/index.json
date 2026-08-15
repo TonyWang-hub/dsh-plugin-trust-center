@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "slug": "deepseek-ai-dsh-base",
+      "name": "@deepseek-ai/dsh-base",
+      "description": "The published base DSH bundle inspected at an exact npm version.",
+      "category": "base-bundle",
+      "source": "npm:@deepseek-ai/dsh-base@0.0.1-rc.1",
+      "sourceKind": "npm",
+      "maintenance": {
+        "provider": "npm",
+        "namespace": "@deepseek-ai",
+        "project": "dsh-base",
+        "revision": "0.0.1-rc.1"
+      },
+      "revision": "0.0.1-rc.1",
+      "status": "verified-package",
+      "verdict": "pass",
+      "digest": "2e5c597129cba417e0f2d69180c57062bb0a37fa91b3dcc8c8f340d06ea1f54e",
+      "declarationTypes": [
+        "bundle"
+      ],
+      "testedDshVersions": [
+        "0.0.1-rc.1"
+      ],
+      "reportPath": "reports/deepseek-ai-dsh-base.json",
+      "detailPath": "detail/deepseek-ai-dsh-base.html"
+    },
+    {
+      "slug": "dsh-plugin-sentinel",
+      "name": "DSH Plugin Sentinel",
+      "description": "A community DSH plugin inspected at an immutable GitHub commit.",
+      "category": "security-observability",
+      "source": "github:BotonJ/dsh-plugin-sentinel#3dcff7a125d7151f2b75a8962c65425d0d9aa0b8",
+      "sourceKind": "github",
+      "maintenance": {
+        "provider": "github",
+        "namespace": "BotonJ",
+        "project": "dsh-plugin-sentinel",
+        "revision": "3dcff7a125d7151f2b75a8962c65425d0d9aa0b8"
+      },
+      "revision": "3dcff7a125d7151f2b75a8962c65425d0d9aa0b8",
+      "status": "candidate",
+      "verdict": "review",
+      "digest": "c1c4b47540d547fc15b16c2b05d3889d99522f8bbdadd9b8ea1a12d2f4272be5",
+      "declarationTypes": [
+        "bundle"
+      ],
+      "severity": "high",
+      "testedDshVersions": [],
+      "reportPath": "reports/dsh-plugin-sentinel.json",
+      "detailPath": "detail/dsh-plugin-sentinel.html"
+    }
+  ]
+}
