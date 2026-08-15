@@ -4,6 +4,22 @@ All notable changes are documented in this file.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-16
+
+### Added
+
+- Installable external DSH bundle with valid Cordis patch metadata and bounded `trust_inspect` / `trust_profile_status` read-only tools.
+- Quarantine installation and target-bound promotion with immutable-source re-inspection, lifecycle scripts disabled by default, atomic digest-bound receipts, and explicit dynamic-execution gating.
+- Contained profile paths, atomic Trust Center writes, immutable-spec ledgers, SHA-256 snapshot manifests, retention, verified restore, and injected official command execution.
+- Transactional official profile disable, re-enable, restore, dry-run plans, configuration validation, and failed-command rollback.
+- Pinned `@deepseek-ai/dsh@0.1.0-rc.6` packed-bundle acceptance in local, CI, and tagged-release gates.
+
+### Security
+
+- Promotion rejects internally inconsistent receipts even when their digest is recomputed, pins the intended profile, and records the promoted immutable spec.
+- DSH executable overrides must be absolute, target profile environments cannot override the selected `DSH_HOME`, and model tools never expose mutation operations.
+- Profile/snapshot symlink escapes, mutable ledger specs, and zero-retention rollback deletion are rejected before mutation.
+
 ## [0.2.0] - 2026-08-16
 
 ### Added
@@ -32,6 +48,7 @@ All notable changes are documented in this file.
 - Manual-only, secret-free dynamic import verification workflow.
 - Least-privilege CI and checksummed GitHub Release automation.
 
-[Unreleased]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/releases/tag/v0.3.0
 [0.2.0]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/releases/tag/v0.2.0
 [0.1.0]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/releases/tag/v0.1.0

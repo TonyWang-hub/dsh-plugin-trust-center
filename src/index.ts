@@ -53,3 +53,86 @@ export { buildSite } from './site/generate.js'
 export type { BuildSiteOptions, RegistryEntry, RegistryFinding } from './site/generate.js'
 export { checkSite } from './site/check.js'
 export type { SiteCheckResult } from './site/check.js'
+
+export { installQuarantine, promoteQuarantine } from './quarantine.js'
+export type {
+  InstallQuarantineOptions,
+  InstallQuarantineResult,
+  PromoteQuarantineOptions,
+  PromotionResult,
+  QuarantineCommand,
+  QuarantineCommandResult,
+  QuarantineReceipt,
+} from './quarantine.js'
+
+export {
+  MAX_PROFILE_NAME_LENGTH,
+  PROFILE_NAME_PATTERN,
+  SNAPSHOT_ID_PATTERN,
+  TRUST_LEDGER_FILE,
+  assertUnderRoot,
+  defaultDshHome,
+  ledgerPath,
+  profileDir,
+  profilesRoot,
+  snapshotDir,
+  snapshotPath,
+  snapshotsRoot,
+  validateProfileName,
+  validateSnapshotId,
+} from './profile/paths.js'
+export { writeFileAtomic } from './profile/atomic.js'
+export type { AtomicWriteOptions } from './profile/atomic.js'
+export {
+  LEDGER_SCHEMA_VERSION,
+  appendLedger,
+  findLatestEntry,
+  loadLedger,
+  parseLedger,
+  validateImmutableInstallSpec,
+} from './profile/ledger.js'
+export type { LedgerAction, LedgerEntry, LedgerEntryInput, LedgerFile } from './profile/ledger.js'
+export {
+  DEFAULT_SNAPSHOT_RETENTION,
+  MAX_SNAPSHOT_RETENTION,
+  SNAPSHOT_SCHEMA_VERSION,
+  SNAPSHOT_TRACKED_FILES,
+  captureSnapshot,
+  formatSnapshotId,
+  listSnapshots,
+  parseSnapshotManifest,
+  readSnapshotManifest,
+  restoreSnapshot,
+} from './profile/snapshot.js'
+export type {
+  CaptureSnapshotOptions,
+  SnapshotManifest,
+  SnapshotSummary,
+  SnapshotTrackedFile,
+} from './profile/snapshot.js'
+export {
+  dshAddCommand,
+  dshDumpConfigCommand,
+  dshPathFromEnv,
+  dshRemoveCommand,
+  runCommand,
+} from './profile/runner.js'
+export type { CommandResult, CommandRunner, RunOptions } from './profile/runner.js'
+export {
+  CommandFailedError,
+  dshRunOptions,
+  resolveDshPath,
+  runMutation,
+} from './profile/transaction.js'
+export type { MutationApi, MutationSummary, RunMutationOptions } from './profile/transaction.js'
+export { restoreProfile } from './profile/restore.js'
+export type { RestoreProfileOptions, RestoreProfileResult } from './profile/restore.js'
+export { disableBundle, reenableBundle, validateBundleName } from './profile/disable.js'
+export type {
+  BundleDescriptor,
+  DisableOptions,
+  DisableResult,
+  ProfileMutationBase,
+  ReenableOptions,
+  ReenableResult,
+} from './profile/disable.js'

@@ -18,6 +18,7 @@ describe('GitHub workflows', () => {
     expect(JSON.stringify(document)).toContain('pnpm registry:build')
     expect(JSON.stringify(document)).toContain('pnpm site:check')
     expect(JSON.stringify(document)).toContain('pnpm pack')
+    expect(JSON.stringify(document)).toContain('pnpm test:dsh-bundle')
   })
 
   it('makes third-party execution manual, explicit, secret-free, and time-bounded', async () => {
@@ -77,6 +78,7 @@ describe('GitHub workflows', () => {
     expect(serialized).toContain('pnpm registry:build')
     expect(serialized).toContain('pnpm site:check')
     expect(serialized).toContain('pnpm pack')
+    expect(serialized).toContain('pnpm test:dsh-bundle')
     expect(serialized).toContain('registry-snapshot')
     expect(serialized).toContain('SHA256SUMS.txt')
     expect(serialized).toContain('gh release create')

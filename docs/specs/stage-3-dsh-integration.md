@@ -40,8 +40,8 @@ Quarantine installation:
 4. Install with lifecycle scripts disabled by default.
 5. Run package/patch validation and `dsh --profile <name> --dump-config`.
 6. Only when `--allow-execute` is explicit, run opt-in dynamic verification in an environment documented as disposable and untrusted.
-7. Produce a signed-by-digest local receipt.
-8. Promotion snapshots the target and invokes the official `dsh plugin --profile <target> add <immutable-spec>` path; any failure restores the snapshot.
+7. Produce an atomic digest-bound local receipt that records the intended target profile, then remove the disposable quarantine home.
+8. Promotion refuses target redirection, snapshots the target, invokes the official `dsh plugin --profile <target> add <immutable-spec>` path, validates configuration, and records the immutable spec in the target ledger; any failure removes partial installation and restores the snapshot.
 
 ## DSH bundle
 
@@ -56,7 +56,7 @@ Profile mutation remains a human CLI action. A Web settings UI, automatic approv
 
 - Unit tests use temporary fake `DSH_HOME` trees and injected command runners.
 - Integration tests invoke a fake `dsh` executable to prove command construction and rollback.
-- A restricted GitHub Actions job installs the pinned official DSH version and verifies the packed Trust Center bundle with `dsh plugin --profile trust-test add <tarball>` followed by `dsh --profile trust-test --dump-config`.
+- A restricted GitHub Actions job installs pinned official `@deepseek-ai/dsh@0.1.0-rc.6` and verifies the packed Trust Center bundle with `dsh plugin --profile trust-test add <tarball>` followed by `dsh --profile trust-test --dump-config`.
 - No test changes or patches the official payload.
 
 ## Acceptance

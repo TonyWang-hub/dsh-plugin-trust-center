@@ -28,6 +28,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - run: pnpm test:dsh-bundle
       - run: pnpm registry:build
       - run: pnpm site:check
       - name: Package release assets

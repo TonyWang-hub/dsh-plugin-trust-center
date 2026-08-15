@@ -19,7 +19,7 @@ Network sources are resolved before inspection: npm metadata records an exact pu
 Download the `.tgz` and `SHA256SUMS.txt` assets from the matching [GitHub Release](https://github.com/TonyWang-hub/dsh-plugin-trust-center/releases), verify the checksum, then run:
 
 ```bash
-npm exec --package ./dsh-plugin-trust-center-0.2.0.tgz -- dsh-trust inspect ./my-plugin
+npm exec --package ./dsh-plugin-trust-center-0.3.0.tgz -- dsh-trust inspect ./my-plugin
 ```
 
 ### Run from source
@@ -40,6 +40,12 @@ dsh-trust inspect <source> [--format human|json|sarif] [--output path]
 dsh-trust schema
 dsh-trust rules
 dsh-trust verify-import <source> [--output path]
+dsh-trust quarantine install <source> --target <profile> [--allow-execute]
+dsh-trust quarantine promote <quarantine-id> --target <profile> [--dry-run]
+dsh-trust profile list
+dsh-trust profile snapshot <profile>
+dsh-trust profile disable <profile> <bundle> [--dry-run]
+dsh-trust profile restore <profile> <snapshot-id> [--dry-run]
 ```
 
 `inspect` never imports target modules or runs package-manager lifecycle scripts. It emits:
@@ -85,6 +91,41 @@ pnpm site:check
 
 Scheduled/manual GitHub Actions publish generated content to the `registry-data` branch and deploy that branch through GitHub Pages. Collection never imports target modules or runs their lifecycle scripts. Submission and rule-governance requirements are documented in [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/rules.md`](docs/rules.md).
 
+## Stage 3: DSH bundle, quarantine, and profile recovery
+
+The `v0.3.0` release tarball is also an external DSH bundle. After verifying its release checksum, add it through the official CLI and validate the composed configuration:
+
+```bash
+export DSH_PATH="$(command -v dsh)" # must resolve to an absolute official DSH executable
+dsh plugin --profile work add "$(pwd)/dsh-plugin-trust-center-0.3.0.tgz"
+dsh --profile work --dump-config
+```
+
+The bundle patch registers only two bounded, read-only model tools: `trust_inspect` and `trust_profile_status`. Local model-driven inspection is denied unless the plugin configuration explicitly lists an allowed local root. Profile mutation is never exposed as a model tool.
+
+Quarantine is an evidence workflow, not a host sandbox:
+
+```bash
+dsh-trust quarantine install npm:example-plugin@1.2.3 --target work
+dsh-trust quarantine promote <quarantine-id> --target work --dry-run
+dsh-trust quarantine promote <quarantine-id> --target work
+```
+
+Installation first creates a static Passport and refuses `fail` verdicts or mutable/local resolved sources. It then uses a dedicated `trust-quarantine-<id>` profile in an isolated temporary `DSH_HOME`, disables npm/pnpm lifecycle scripts, runs `--dump-config`, writes an atomic digest-bound receipt below `$DSH_HOME/quarantine`, and removes the disposable install tree. `--allow-execute` is the only path that imports target code and should be used only in a disposable, credential-free environment. Promotion re-inspects the immutable source, verifies the receipt and Passport digest, snapshots the target, calls official `dsh plugin add`, validates with `--dump-config`, and records the immutable install spec in the target profile ledger. A target named in the receipt cannot be changed during promotion.
+
+Profile operations are explicit and snapshot-backed:
+
+```bash
+dsh-trust profile list
+dsh-trust profile snapshot work
+dsh-trust profile disable work example-plugin --dry-run
+dsh-trust profile disable work example-plugin
+dsh-trust profile restore work <snapshot-id> --dry-run
+dsh-trust profile restore work <snapshot-id>
+```
+
+Snapshots live below `$DSH_HOME/snapshots/<profile>`, contain only bounded profile control files plus the Trust Center ledger, and carry per-file SHA-256 digests. Disable works only when an immutable ledger record exists, invokes official `dsh plugin remove`, and restores/reinstalls on failure. Restore verifies snapshot identity and digests, reinstalls ledger-pinned bundles through official commands, and rolls back partial restoration. Trust Center never disables a bundle by editing only `dsh.profile.bundles`.
+
 ## Verdict model
 
 - `fail`: at least one critical structural finding, including an invalid manifest, escaping/missing/invalid Cordis patch, invalid client/profile declaration, no DSH declaration, or an incomplete scan caused by limits or links;
@@ -97,7 +138,7 @@ Use `dsh-trust rules` for machine-readable rule metadata. Rule findings report o
 
 1. **Plugin Passport CLI** — implemented in `v0.1.0`.
 2. **Community Registry** — implemented in `v0.2.0` with GitHub Actions, Pages reports, badges, and contribution rules.
-3. **DSH integration** — external bundle, quarantine profiles, snapshots, disable, and rollback.
+3. **DSH integration** — implemented in `v0.3.0` with the external bundle, quarantine receipts/promotion, transactional snapshots, official disable/restore commands, and rollback.
 
 Specifications live in [`docs/specs`](docs/specs). The security boundary and explicit non-goals are documented in [`docs/threat-model.md`](docs/threat-model.md).
 
