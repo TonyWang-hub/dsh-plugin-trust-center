@@ -21,6 +21,9 @@ describe('DSH bundle declaration', () => {
       peerDependencies?: Record<string, string>
       devDependencies: Record<string, string>
       scripts: Record<string, string>
+      publishConfig?: Record<string, unknown>
+      bin?: Record<string, string>
+      repository?: unknown
     }
     const patch = YAML.parse(await readFile('cordis.patch.yml', 'utf8')) as unknown
     const workspace = YAML.parse(await readFile('pnpm-workspace.yaml', 'utf8')) as {
@@ -32,7 +35,16 @@ describe('DSH bundle declaration', () => {
       types: './dist/plugin.d.ts',
       default: './dist/plugin.js',
     })
-    expect(manifest.version).toBe('0.3.1')
+    expect(manifest.version).toBe('0.3.2')
+    expect(manifest.publishConfig).toEqual({
+      access: 'public',
+      registry: 'https://registry.npmjs.org/',
+    })
+    expect(manifest.bin).toEqual({ 'dsh-trust': 'dist/cli.js' })
+    expect(manifest.repository).toEqual({
+      type: 'git',
+      url: 'git+https://github.com/TonyWang-hub/dsh-plugin-trust-center.git',
+    })
     expect(manifest.files).toContain('cordis.patch.yml')
     expect(manifest.peerDependencies).toEqual({
       '@deepseek-ai/cordis': '^4.0.1',

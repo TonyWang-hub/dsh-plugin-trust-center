@@ -63,7 +63,10 @@ describe.skipIf(!runReal)('packed DSH bundle acceptance', () => {
         'package/dist/plugin.js',
         'package/dist/plugin.d.ts',
       ]))
-      expect(entries.some(entry => entry.startsWith('package/src/') || entry.startsWith('package/test/'))).toBe(false)
+      expect(entries.some(entry => entry.startsWith('package/src/')
+        || entry.startsWith('package/test/')
+        || entry.startsWith('package/.github/')
+        || entry.startsWith('package/dogfood-artifacts/'))).toBe(false)
       const env = {
         ...process.env,
         DSH_HOME: home,

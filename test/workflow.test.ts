@@ -90,6 +90,44 @@ describe('GitHub workflows', () => {
     expect(serialized).not.toMatch(/secrets\./)
   })
 
+  it('publishes an exact checksummed Release tarball to npm with bounded credentials and provenance', async () => {
+    const document = await workflow('publish-npm.yml')
+    const serialized = JSON.stringify(document)
+    expect(document.permissions).toEqual({ contents: 'read', 'id-token': 'write' })
+    expect(serialized).toContain('workflow_dispatch')
+    expect(serialized).not.toContain('pull_request')
+    expect(serialized).not.toContain('schedule')
+    expect(serialized).not.toContain('push')
+    expect(serialized).toContain('timeout-minutes')
+    expect(serialized).toContain('cancel-in-progress')
+    expect(serialized).toContain('environment":"npm')
+    expect(serialized).toContain('gh release download')
+    expect(serialized).toContain('SHA256SUMS.txt')
+    expect(serialized).toContain('sha256sum -c SHA256SUMS.txt')
+    expect(serialized).toContain('grep -F')
+    expect(serialized).toContain('--connect-timeout 10')
+    expect(serialized).toContain('--max-time 30')
+    expect(serialized).toContain('package/package.json')
+    expect(serialized).toContain('registry.npmjs.org')
+    expect(serialized).toContain('npm publish')
+    expect(serialized).toContain('--provenance')
+    expect(serialized).toContain('--access public')
+    expect(serialized).not.toContain('pnpm pack')
+    expect(serialized).not.toContain('npm pack')
+    expect(serialized).not.toMatch(/uses":"[^"@]+@v[0-9]+/)
+    expect(serialized.match(/uses":"[^"@]+@[a-f0-9]{40}/g)).toHaveLength(1)
+
+    const jobs = document.jobs as Record<string, { environment?: unknown; steps?: Array<Record<string, unknown>> }>
+    const publish = jobs.publish
+    expect(publish?.environment).toBe('npm')
+    const credentialSteps = (publish?.steps ?? []).filter(step => JSON.stringify(step).includes('secrets.NPM_TOKEN'))
+    expect(credentialSteps).toHaveLength(1)
+    expect(credentialSteps[0]).toMatchObject({
+      name: 'Publish exact Release tarball',
+      env: { NODE_AUTH_TOKEN: '${{ secrets.NPM_TOKEN }}' },
+    })
+  })
+
   it('publishes tested, checksummed assets only from version tags', async () => {
     const document = await workflow('release.yml')
     const serialized = JSON.stringify(document)
@@ -103,6 +141,8 @@ describe('GitHub workflows', () => {
     expect(serialized).toContain('registry-snapshot')
     expect(serialized).toContain('SHA256SUMS.txt')
     expect(serialized).toContain('gh release create')
+    expect(serialized).not.toMatch(/uses":"[^"@]+@v[0-9]+/)
+    expect(serialized.match(/uses":"[^"@]+@[a-f0-9]{40}/g)).toHaveLength(3)
     expect(serialized).not.toMatch(/secrets\./)
   })
 })

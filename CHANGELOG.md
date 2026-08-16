@@ -4,10 +4,13 @@ All notable changes are documented in this file.
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-08-16
+
 ### Added
 
 - Reproducible `pnpm dogfood` orchestration for pinned official DSH bundle acceptance, immutable community-plugin static inspection, script-disabled quarantine installation, promotion dry-run, and focused safety regressions.
 - Manual-only, read-only, secret-free Constrained Dogfood workflow with bounded evidence artifacts and no community-plugin dynamic execution.
+- Public npm distribution using the exact checksummed GitHub Release tarball, a protected manual environment, bounded bootstrap credentials, and GitHub Actions provenance.
 
 ## [0.3.1] - 2026-08-16
 
@@ -68,7 +71,8 @@ All notable changes are documented in this file.
 - Manual-only, secret-free dynamic import verification workflow.
 - Least-privilege CI and checksummed GitHub Release automation.
 
-[Unreleased]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/releases/tag/v0.3.2
 [0.3.1]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/releases/tag/v0.3.1
 [0.3.0]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/releases/tag/v0.3.0
 [0.2.0]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/releases/tag/v0.2.0

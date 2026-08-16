@@ -14,12 +14,20 @@ Stage 1 performs deterministic, static-by-default inspection of:
 
 Network sources are resolved before inspection: npm metadata records an exact published version and GitHub refs resolve to a 40-character commit SHA. Archive extraction rejects traversal, links, oversized downloads, oversized files, excessive entries, and excessive expanded size.
 
+### Run from npm
+
+Install and run the exact public version:
+
+```bash
+npm exec --package dsh-plugin-trust-center@0.3.2 -- dsh-trust inspect ./my-plugin
+```
+
 ### Run from a GitHub Release
 
 Download the `.tgz` and `SHA256SUMS.txt` assets from the matching [GitHub Release](https://github.com/TonyWang-hub/dsh-plugin-trust-center/releases), verify the checksum, then run:
 
 ```bash
-npm exec --package ./dsh-plugin-trust-center-0.3.1.tgz -- dsh-trust inspect ./my-plugin
+npm exec --package ./dsh-plugin-trust-center-0.3.2.tgz -- dsh-trust inspect ./my-plugin
 ```
 
 ### Run from source
@@ -93,11 +101,13 @@ Scheduled/manual GitHub Actions publish generated content to the `registry-data`
 
 ## Stage 3: DSH bundle, quarantine, and profile recovery
 
-The `v0.3.1` release tarball is also an external DSH bundle. After verifying its release checksum, add it through the official CLI and validate the composed configuration:
+The npm package and matching `v0.3.2` Release tarball are also external DSH bundles. Add either immutable spec through the official CLI and validate the composed configuration:
 
 ```bash
 export DSH_PATH="$(command -v dsh)" # must resolve to an absolute official DSH executable
-dsh plugin --profile work add "$(pwd)/dsh-plugin-trust-center-0.3.1.tgz"
+dsh plugin --profile work add dsh-plugin-trust-center@0.3.2
+# Or, after verifying SHA256SUMS.txt:
+# dsh plugin --profile work add "$(pwd)/dsh-plugin-trust-center-0.3.2.tgz"
 dsh --profile work --dump-config
 ```
 
@@ -140,6 +150,10 @@ pnpm dogfood
 The command reads the immutable Sentinel commit from `registry/sources.json`, verifies the packed bundle with pinned official `@deepseek-ai/dsh@0.1.0-rc.6`, emits a static Passport, performs a lifecycle-script-disabled quarantine install in a temporary `DSH_HOME`, requires a receipt with `executed: false`, runs promotion only with `--dry-run`, and executes the focused process, ledger, rollback, snapshot, quarantine, plugin, and CLI regression suites. Bounded evidence is written to `dogfood-artifacts/`; temporary profile state is removed even on failure.
 
 The **Constrained Dogfood** GitHub workflow exposes the same command through manual `workflow_dispatch` only. It has read-only repository permission, no secrets, no dynamic import, a 20-minute timeout, and seven-day artifact retention. Network-dependent dogfood is intentionally excluded from ordinary push and pull-request CI.
+
+### npm publication integrity
+
+npm publication is a separate protected manual workflow. It downloads every asset from an existing stable GitHub Release, verifies `SHA256SUMS.txt`, requires the tarball package name and version to match the selected tag, and refuses an already-published version. The workflow publishes that exact tarball with `--provenance`; it does not rebuild or repack. Bootstrap credentials are scoped to the `npm` Environment and exposed only to the publish step. Because publication uses `workflow_dispatch`, provenance identifies the manual workflow run on `main`; the verified checksum and package-version checks provide the binding to the selected Release tag.
 
 ## Verdict model
 

@@ -1,18 +1,25 @@
 {
   "name": "dsh-plugin-trust-center",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Evidence-first inspection, compatibility verification, and quarantine tooling for DeepSeek Harness plugins.",
   "type": "module",
   "license": "Apache-2.0",
   "author": "TonyWang-hub",
-  "repository": "github:TonyWang-hub/dsh-plugin-trust-center",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TonyWang-hub/dsh-plugin-trust-center.git"
+  },
   "homepage": "https://tonywang-hub.github.io/dsh-plugin-trust-center/",
   "bugs": "https://github.com/TonyWang-hub/dsh-plugin-trust-center/issues",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "engines": {
     "node": ">=24.17.0 <25"
   },
   "bin": {
-    "dsh-trust": "./dist/cli.js"
+    "dsh-trust": "dist/cli.js"
   },
   "types": "./dist/index.d.ts",
   "exports": {

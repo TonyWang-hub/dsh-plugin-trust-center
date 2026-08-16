@@ -1,0 +1,80 @@
+name: Publish npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing GitHub Release tag to publish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-npm-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    environment: npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24.17.0
+          registry-url: https://registry.npmjs.org/
+      - name: Download and verify exact Release assets
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NPM_RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$NPM_RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "release tag must be a stable vMAJOR.MINOR.PATCH value" >&2
+            exit 1
+          fi
+          version="${NPM_RELEASE_TAG#v}"
+          tarball="dsh-plugin-trust-center-$version.tgz"
+          mkdir npm-release
+          gh release download "$NPM_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir npm-release
+          cd npm-release
+          grep -F -- "  $tarball" SHA256SUMS.txt >/dev/null
+          sha256sum -c SHA256SUMS.txt
+          test -f "$tarball"
+          tar -xOf "$tarball" package/package.json > package.json.asset
+          package_name="$(node --input-type=module -e "import { readFileSync } from 'node:fs'; process.stdout.write(JSON.parse(readFileSync('package.json.asset', 'utf8')).name)")"
+          package_version="$(node --input-type=module -e "import { readFileSync } from 'node:fs'; process.stdout.write(JSON.parse(readFileSync('package.json.asset', 'utf8')).version)")"
+          test "$package_name" = "dsh-plugin-trust-center"
+          test "$package_version" = "$version"
+          status="$(curl --silent --show-error --connect-timeout 10 --max-time 30 --output registry.json --write-out '%{http_code}' "https://registry.npmjs.org/dsh-plugin-trust-center/$version")"
+          case "$status" in
+            404) ;;
+            200) echo "dsh-plugin-trust-center@$version is already published" >&2; exit 1 ;;
+            *) echo "npm registry preflight failed with HTTP $status" >&2; exit 1 ;;
+          esac
+          printf 'tarball=%s/%s\n' "$PWD" "$tarball" >> "$GITHUB_OUTPUT"
+          printf 'package_name=%s\n' "$package_name" >> "$GITHUB_OUTPUT"
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+      - name: Publish exact Release tarball
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish "${{ steps.release.outputs.tarball }}" --access public --provenance
+      - name: Verify npm registry visibility
+        env:
+          PACKAGE_NAME: ${{ steps.release.outputs.package_name }}
+          PACKAGE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          for attempt in {1..12}; do
+            published="$(npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version --json 2>/dev/null | tr -d '"' || true)"
+            if [ "$published" = "$PACKAGE_VERSION" ]; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "$PACKAGE_NAME@$PACKAGE_VERSION did not become visible" >&2
+          exit 1
