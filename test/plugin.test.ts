@@ -40,6 +40,7 @@ describe('DSH bundle declaration', () => {
     })
     expect(manifest.devDependencies['@deepseek-ai/dsh']).toBe('0.1.0-rc.6')
     expect(manifest.scripts['test:dsh-bundle']).toBe('DSH_REAL_BUNDLE=1 vitest run test/dsh-bundle.acceptance.test.ts')
+    expect(manifest.scripts.dogfood).toBe('pnpm build && node dist/dogfood.js')
     expect(workspace.allowBuilds).toEqual({
       '@deepseek-ai/dsh-subprocess-local': false,
       '@google/genai': false,

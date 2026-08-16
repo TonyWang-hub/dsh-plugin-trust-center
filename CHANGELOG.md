@@ -4,6 +4,11 @@ All notable changes are documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Reproducible `pnpm dogfood` orchestration for pinned official DSH bundle acceptance, immutable community-plugin static inspection, script-disabled quarantine installation, promotion dry-run, and focused safety regressions.
+- Manual-only, read-only, secret-free Constrained Dogfood workflow with bounded evidence artifacts and no community-plugin dynamic execution.
+
 ## [0.3.1] - 2026-08-16
 
 ### Fixed

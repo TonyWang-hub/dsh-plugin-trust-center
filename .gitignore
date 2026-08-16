@@ -3,6 +3,7 @@ dist/
 release/
 public/
 coverage/
+dogfood-artifacts/
 .DS_Store
 *.log
 *.tgz

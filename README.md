@@ -128,6 +128,19 @@ Snapshots live below `$DSH_HOME/snapshots/<profile>`, contain only bounded profi
 
 The `v0.3.1` hardening release serializes ledger writers, terminates timed-out POSIX command process groups, preserves original and rollback errors, protects restore targets at the snapshot-ring limit, checks promotion cleanup failures, and isolates corrupt profile manifests in the read-only status tool.
 
+### Reproducible constrained dogfood
+
+Run the bounded release-confidence path from a clean checkout:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm dogfood
+```
+
+The command reads the immutable Sentinel commit from `registry/sources.json`, verifies the packed bundle with pinned official `@deepseek-ai/dsh@0.1.0-rc.6`, emits a static Passport, performs a lifecycle-script-disabled quarantine install in a temporary `DSH_HOME`, requires a receipt with `executed: false`, runs promotion only with `--dry-run`, and executes the focused process, ledger, rollback, snapshot, quarantine, plugin, and CLI regression suites. Bounded evidence is written to `dogfood-artifacts/`; temporary profile state is removed even on failure.
+
+The **Constrained Dogfood** GitHub workflow exposes the same command through manual `workflow_dispatch` only. It has read-only repository permission, no secrets, no dynamic import, a 20-minute timeout, and seven-day artifact retention. Network-dependent dogfood is intentionally excluded from ordinary push and pull-request CI.
+
 ## Verdict model
 
 - `fail`: at least one critical structural finding, including an invalid manifest, escaping/missing/invalid Cordis patch, invalid client/profile declaration, no DSH declaration, or an incomplete scan caused by limits or links;

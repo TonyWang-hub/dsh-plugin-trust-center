@@ -42,6 +42,27 @@ describe('GitHub workflows', () => {
     expect(serialized).toContain('npm:*|github:*')
   })
 
+  it('runs constrained dogfood only by manual request without community code execution', async () => {
+    const document = await workflow('dogfood.yml')
+    const serialized = JSON.stringify(document)
+    expect(document.permissions).toEqual({ contents: 'read' })
+    expect(serialized).toContain('workflow_dispatch')
+    expect(serialized).not.toContain('pull_request')
+    expect(serialized).not.toContain('schedule')
+    expect(serialized).not.toMatch(/secrets\./)
+    expect(serialized).toContain('timeout-minutes')
+    expect(serialized).toContain('cancel-in-progress')
+    expect(serialized).toContain('pnpm dogfood')
+    expect(serialized).toContain('actions/upload-artifact')
+    expect(serialized).toContain('dogfood-artifacts')
+    expect(serialized).toContain('retention-days')
+    expect(serialized).not.toMatch(/uses":"[^"@]+@v[0-9]+/)
+    expect(serialized.match(/uses":"[^"@]+@[a-f0-9]{40}/g)).toHaveLength(4)
+    expect(serialized).not.toContain('verify-import')
+    expect(serialized).not.toContain('allow_execute')
+    expect(serialized).not.toContain('DSH_TRUST_ALLOW_EXECUTION')
+  })
+
   it('refreshes only static evidence on scheduled or manual runs', async () => {
     const document = await workflow('registry.yml')
     const serialized = JSON.stringify(document)

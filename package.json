@@ -58,6 +58,7 @@
     "registry:build": "pnpm build && node dist/registry/build.js",
     "site:check": "node dist/site/check.js public",
     "test:dsh-bundle": "DSH_REAL_BUNDLE=1 vitest run test/dsh-bundle.acceptance.test.ts",
+    "dogfood": "pnpm build && node dist/dogfood.js",
     "prepack": "pnpm build"
   },
   "dependencies": {
