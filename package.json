@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-trust-center",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Evidence-first inspection, compatibility verification, and quarantine tooling for DeepSeek Harness plugins.",
   "type": "module",
   "license": "Apache-2.0",

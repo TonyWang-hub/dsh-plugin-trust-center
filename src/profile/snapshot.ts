@@ -47,6 +47,8 @@ export interface CaptureSnapshotOptions {
   profile: string
   now?: Date
   retention?: number
+  /** Snapshot ids that ring retention must not evict during this capture. */
+  preserveSnapshotIds?: string[]
 }
 
 export interface SnapshotSummary {
@@ -113,7 +115,8 @@ export async function captureSnapshot(options: CaptureSnapshotOptions): Promise<
   }
   // Manifest last: a crash before this leaves no restorable snapshot.
   await writeFileAtomic(join(dir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
-  await enforceRetention(root, retention)
+  const preserved = new Set((options.preserveSnapshotIds ?? []).map(validateSnapshotId))
+  await enforceRetention(root, retention, preserved)
   return id
 }
 
@@ -328,8 +331,12 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
-/** Removes the oldest snapshot directories until `retention` remain. */
-async function enforceRetention(snapRoot: string, retention: number): Promise<void> {
+/** Removes the oldest unprotected snapshot directories until `retention` remain. */
+async function enforceRetention(
+  snapRoot: string,
+  retention: number,
+  preserved: ReadonlySet<string> = new Set(),
+): Promise<void> {
   let names: string[]
   try {
     names = await readdir(snapRoot)
@@ -348,7 +355,9 @@ async function enforceRetention(snapRoot: string, retention: number): Promise<vo
   }
   directories.sort()
   const excess = directories.length - retention
-  for (const name of directories.slice(0, excess)) {
+  const removable = directories.filter(name => !preserved.has(name))
+  if (removable.length < excess) throw new Error('snapshot retention cannot preserve every requested snapshot')
+  for (const name of removable.slice(0, excess)) {
     await rm(join(snapRoot, name), { recursive: true, force: true })
   }
 }

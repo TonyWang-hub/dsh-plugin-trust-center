@@ -167,6 +167,43 @@ describe('runMutation', () => {
     }
   })
 
+  it('preserves the original failure when the rollback hook also fails', async () => {
+    const fixture = await installFakeDsh()
+    const home = await root()
+    try {
+      const profile = 'trust-test'
+      await setupProfile(home, profile, ['trust-demo'], initialLedgerJson('trust-demo@1.2.3'))
+
+      let thrown: unknown
+      try {
+        await runMutation({
+          home,
+          profile,
+          dshPath: fixture.dshPath,
+          runner: (command, args, options) => fixture.runner(command, args, {
+            ...options,
+            env: { ...(options?.env ?? process.env), FAKE_DSH_FAIL_DUMP: '1' },
+          }),
+          now: NOW,
+          rollback: async () => { throw new Error('rollback hook failed') },
+        }, removeSteps)
+      } catch (error) {
+        thrown = error
+      }
+
+      expect(thrown).toBeInstanceOf(AggregateError)
+      if (thrown instanceof AggregateError) {
+        expect(thrown.errors).toHaveLength(2)
+        expect(thrown.errors[0]).toBeInstanceOf(CommandFailedError)
+        expect(thrown.errors[1]).toMatchObject({ message: 'rollback hook failed' })
+        expect(thrown.cause).toBe(thrown.errors[0])
+      }
+    } finally {
+      await fixture.cleanup()
+      await rm(home, { recursive: true, force: true })
+    }
+  })
+
   it('rolls back when a step command exits nonzero after mutating', async () => {
     const fixture = await installFakeDsh()
     const home = await root()

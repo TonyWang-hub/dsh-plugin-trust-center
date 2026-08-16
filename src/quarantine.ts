@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { lstat, mkdir, readFile, rm } from 'node:fs/promises'
+import { lstat, mkdir, readFile, rm, rmdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { Passport, VerdictStatus } from './model.js'
 import { canonicalJson } from './passport.js'
@@ -78,9 +78,12 @@ export async function installQuarantine(
   const installSpec = immutable.kind === 'npm'
     ? `${immutable.name}@${immutable.version}`
     : `github:${immutable.owner}/${immutable.repo}#${immutable.ref}`
-  const receiptDirectory = await prepareReceiptDirectory(options.receiptRoot, id)
-  const home = await options.makeTempHome()
+  const preparedReceipt = await prepareReceiptDirectory(options.receiptRoot, id)
+  const receiptDirectory = preparedReceipt.path
+  let home: string | undefined
+  let receiptWritten = false
   try {
+    home = await options.makeTempHome()
     const env = {
       DSH_HOME: home,
       npm_config_ignore_scripts: 'true',
@@ -114,10 +117,14 @@ export async function installQuarantine(
     }
     const receiptPath = join(receiptDirectory, 'receipt.json')
     await writeFileAtomic(receiptPath, `${canonicalJson(receipt)}\n`)
+    receiptWritten = true
     return { receipt, receiptPath }
   } finally {
     // The receipt retains all promotable evidence; the isolated install tree is disposable.
-    await rm(home, { recursive: true, force: true }).catch(() => undefined)
+    if (home !== undefined) await rm(home, { recursive: true, force: true }).catch(() => undefined)
+    if (!receiptWritten && preparedReceipt.created) {
+      await rmdir(receiptDirectory).catch(() => undefined)
+    }
   }
 }
 
@@ -180,18 +187,27 @@ export async function promoteQuarantine(
     await checkedRun(options.run, { command: 'dsh', args: ['--profile', targetProfile, '--dump-config'], env, timeoutMs: 60_000 })
     await options.recordInstall(targetProfile, receipt)
   } catch (error) {
-    await options.restoreTarget(targetProfile, snapshotId, receipt.packageName)
+    try {
+      await options.restoreTarget(targetProfile, snapshotId, receipt.packageName)
+    } catch (rollbackError) {
+      throw new AggregateError(
+        [error, rollbackError],
+        'quarantine promotion failed and rollback was incomplete',
+        { cause: error },
+      )
+    }
     throw error
   }
   return { profile: targetProfile, snapshotId, installSpec: receipt.installSpec, dryRun: false, commands }
 }
 
-async function prepareReceiptDirectory(root: string, id: string): Promise<string> {
+async function prepareReceiptDirectory(root: string, id: string): Promise<{ path: string; created: boolean }> {
   await mkdir(root, { recursive: true })
   const rootInfo = await lstat(root)
   if (rootInfo.isSymbolicLink()) throw new Error('quarantine receipt root must not be a symbolic link')
   if (!rootInfo.isDirectory()) throw new Error('quarantine receipt root must be a directory')
   const directory = join(root, id)
+  let created = false
   try {
     const info = await lstat(directory)
     if (info.isSymbolicLink()) throw new Error('quarantine receipt directory must not be a symbolic link')
@@ -199,8 +215,9 @@ async function prepareReceiptDirectory(root: string, id: string): Promise<string
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
     await mkdir(directory)
+    created = true
   }
-  return directory
+  return { path: directory, created }
 }
 
 function assertReceiptConsistency(receipt: QuarantineReceipt): void {

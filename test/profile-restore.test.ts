@@ -3,8 +3,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { profileDir } from '../src/profile/paths.js'
-import { captureSnapshot } from '../src/profile/snapshot.js'
+import { captureSnapshot, listSnapshots } from '../src/profile/snapshot.js'
 import { restoreProfile } from '../src/profile/restore.js'
+import { CommandFailedError } from '../src/profile/transaction.js'
 import { installFakeDsh, profilePackageJson } from './profile-helpers.js'
 
 const DIGEST = 'a'.repeat(64)
@@ -65,6 +66,44 @@ describe('restoreProfile', () => {
       await rm(home, { recursive: true, force: true })
     }
   })
+
+  it('preserves the restore target when the snapshot ring already contains 100 entries', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'dsh-trust-restore-ring-'))
+    const fixture = await installFakeDsh()
+    try {
+      const target = await setupTarget(home)
+      for (let index = 0; index < 99; index += 1) {
+        await captureSnapshot({
+          home,
+          profile: 'work',
+          now: new Date(Date.UTC(2026, 7, 16, 0, 0, index)),
+          retention: 100,
+        })
+      }
+      expect(await listSnapshots(home, 'work')).toHaveLength(100)
+      const root = profileDir(home, 'work')
+      await writeFile(join(root, 'package.json'), profilePackageJson([], {}))
+      await writeFile(join(root, 'trust-ledger.json'), ledger('remove'))
+
+      const result = await restoreProfile({
+        home,
+        profile: 'work',
+        snapshotId: target.id,
+        dshPath: fixture.dshPath,
+        runner: fixture.runner,
+        now: new Date('2026-08-20T00:00:00.000Z'),
+        retention: 100,
+      })
+
+      const snapshots = await listSnapshots(home, 'work')
+      expect(snapshots).toHaveLength(100)
+      expect(snapshots.map(item => item.snapshotId)).toContain(target.id)
+      expect(snapshots.map(item => item.snapshotId)).toContain(result.rollbackSnapshotId)
+    } finally {
+      await fixture.cleanup()
+      await rm(home, { recursive: true, force: true })
+    }
+  }, 20_000)
 
   it('refuses digest-mismatched snapshot control files during dry run', async () => {
     const home = await mkdtemp(join(tmpdir(), 'dsh-trust-restore-digest-'))
@@ -140,6 +179,50 @@ describe('restoreProfile', () => {
         ['plugin', '--profile', 'work', 'add', 'trust-demo@1.2.3'],
         ['plugin', '--profile', 'work', 'remove', 'trust-demo'],
       ])
+      expect(await readFile(join(root, 'package.json'), 'utf8')).toBe(beforePackage)
+      expect(await readFile(join(root, 'trust-ledger.json'), 'utf8')).toBe(beforeLedger)
+    } finally {
+      await fixture.cleanup()
+      await rm(home, { recursive: true, force: true })
+    }
+  })
+
+  it('preserves the add failure when rollback removal also fails', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'dsh-trust-restore-aggregate-'))
+    const fixture = await installFakeDsh()
+    try {
+      const target = await setupTarget(home)
+      const root = profileDir(home, 'work')
+      const beforePackage = profilePackageJson([], {})
+      const beforeLedger = ledger('remove')
+      await writeFile(join(root, 'package.json'), beforePackage)
+      await writeFile(join(root, 'trust-ledger.json'), beforeLedger)
+
+      let thrown: unknown
+      try {
+        await restoreProfile({
+          home,
+          profile: 'work',
+          snapshotId: target.id,
+          dshPath: fixture.dshPath,
+          runner: fixture.runner,
+          now: new Date('2026-08-16T00:00:00.000Z'),
+          env: {
+            FAKE_DSH_FAIL_ADD: 'trust-demo',
+            FAKE_DSH_FAIL_REMOVE: 'trust-demo',
+          },
+        })
+      } catch (error) {
+        thrown = error
+      }
+
+      expect(thrown).toBeInstanceOf(AggregateError)
+      if (thrown instanceof AggregateError) {
+        expect(thrown.errors).toHaveLength(2)
+        expect(thrown.errors[0]).toBeInstanceOf(CommandFailedError)
+        expect(thrown.errors[1]).toBeInstanceOf(CommandFailedError)
+        expect(thrown.cause).toBe(thrown.errors[0])
+      }
       expect(await readFile(join(root, 'package.json'), 'utf8')).toBe(beforePackage)
       expect(await readFile(join(root, 'trust-ledger.json'), 'utf8')).toBe(beforeLedger)
     } finally {

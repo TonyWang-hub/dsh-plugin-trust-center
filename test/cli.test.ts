@@ -325,6 +325,58 @@ describe('runCli', () => {
     }
   })
 
+  it('reports an incomplete promotion rollback when official remove fails', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'dsh-trust-cli-promote-rollback-'))
+    const isolated = await mkdtemp(join(tmpdir(), 'dsh-trust-cli-promote-rollback-isolated-'))
+    try {
+      const baseDependencies = {
+        home,
+        inspect: async () => quarantinePassport(),
+        dshPath: '/absolute/dsh',
+        makeTempHome: async () => isolated,
+        id: () => 'q-rollback',
+        now: () => new Date('2026-08-16T00:00:00.000Z'),
+      }
+      expect(await runCli([
+        'quarantine', 'install', 'npm:demo-bundle@1.2.3', '--target', 'work',
+      ], capture().io, {
+        ...baseDependencies,
+        runner: async () => ({ exitCode: 0, stdout: '{}', stderr: '' }),
+      })).toBe(0)
+      const profileRoot = join(home, 'profiles', 'work')
+      const original = `${JSON.stringify({
+        name: 'work', version: '0.0.0', dependencies: {}, dsh: { profile: { bundles: [] } },
+      }, null, 2)}\n`
+      await mkdir(profileRoot, { recursive: true })
+      await writeFile(join(profileRoot, 'package.json'), original)
+      const calls: string[][] = []
+      const output = capture()
+
+      const code = await runCli([
+        'quarantine', 'promote', 'q-rollback', '--target', 'work',
+      ], output.io, {
+        ...baseDependencies,
+        runner: async (_command, args) => {
+          calls.push(args)
+          if (args.includes('add')) return { exitCode: 1, stdout: '', stderr: 'add failed' }
+          if (args.includes('remove')) return { exitCode: 1, stdout: '', stderr: 'remove failed' }
+          return { exitCode: 0, stdout: '{}', stderr: '' }
+        },
+      })
+
+      expect(code).toBe(1)
+      expect(calls).toEqual([
+        ['plugin', '--profile', 'work', 'add', 'demo-bundle@1.2.3'],
+        ['plugin', '--profile', 'work', 'remove', 'demo-bundle'],
+      ])
+      expect(output.stderr.join('')).toContain('rollback was incomplete')
+      expect(await readFile(join(profileRoot, 'package.json'), 'utf8')).toBe(original)
+    } finally {
+      await rm(home, { recursive: true, force: true })
+      await rm(isolated, { recursive: true, force: true })
+    }
+  })
+
   it('returns an operational error without a stack or environment disclosure', async () => {
     const output = capture()
 

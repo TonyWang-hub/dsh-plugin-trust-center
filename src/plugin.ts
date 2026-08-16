@@ -129,11 +129,13 @@ async function readDependencyNames(path: string): Promise<string[]> {
   try {
     const info = await stat(path)
     if (!info.isFile() || info.size > 1024 * 1024) return []
-    const parsed = JSON.parse(await readFile(path, 'utf8')) as { dependencies?: unknown }
-    if (parsed.dependencies === null || typeof parsed.dependencies !== 'object' || Array.isArray(parsed.dependencies)) return []
-    return Object.keys(parsed.dependencies).sort().slice(0, 500)
+    const parsed = JSON.parse(await readFile(path, 'utf8')) as unknown
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) return []
+    const dependencies = (parsed as { dependencies?: unknown }).dependencies
+    if (dependencies === null || typeof dependencies !== 'object' || Array.isArray(dependencies)) return []
+    return Object.keys(dependencies).sort().slice(0, 500)
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return []
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT' || error instanceof SyntaxError) return []
     throw error
   }
 }

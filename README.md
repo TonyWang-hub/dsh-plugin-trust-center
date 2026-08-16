@@ -19,7 +19,7 @@ Network sources are resolved before inspection: npm metadata records an exact pu
 Download the `.tgz` and `SHA256SUMS.txt` assets from the matching [GitHub Release](https://github.com/TonyWang-hub/dsh-plugin-trust-center/releases), verify the checksum, then run:
 
 ```bash
-npm exec --package ./dsh-plugin-trust-center-0.3.0.tgz -- dsh-trust inspect ./my-plugin
+npm exec --package ./dsh-plugin-trust-center-0.3.1.tgz -- dsh-trust inspect ./my-plugin
 ```
 
 ### Run from source
@@ -93,11 +93,11 @@ Scheduled/manual GitHub Actions publish generated content to the `registry-data`
 
 ## Stage 3: DSH bundle, quarantine, and profile recovery
 
-The `v0.3.0` release tarball is also an external DSH bundle. After verifying its release checksum, add it through the official CLI and validate the composed configuration:
+The `v0.3.1` release tarball is also an external DSH bundle. After verifying its release checksum, add it through the official CLI and validate the composed configuration:
 
 ```bash
 export DSH_PATH="$(command -v dsh)" # must resolve to an absolute official DSH executable
-dsh plugin --profile work add "$(pwd)/dsh-plugin-trust-center-0.3.0.tgz"
+dsh plugin --profile work add "$(pwd)/dsh-plugin-trust-center-0.3.1.tgz"
 dsh --profile work --dump-config
 ```
 
@@ -126,6 +126,8 @@ dsh-trust profile restore work <snapshot-id>
 
 Snapshots live below `$DSH_HOME/snapshots/<profile>`, contain only bounded profile control files plus the Trust Center ledger, and carry per-file SHA-256 digests. Disable works only when an immutable ledger record exists, invokes official `dsh plugin remove`, and restores/reinstalls on failure. Restore verifies snapshot identity and digests, reinstalls ledger-pinned bundles through official commands, and rolls back partial restoration. Trust Center never disables a bundle by editing only `dsh.profile.bundles`.
 
+The `v0.3.1` hardening release serializes ledger writers, terminates timed-out POSIX command process groups, preserves original and rollback errors, protects restore targets at the snapshot-ring limit, checks promotion cleanup failures, and isolates corrupt profile manifests in the read-only status tool.
+
 ## Verdict model
 
 - `fail`: at least one critical structural finding, including an invalid manifest, escaping/missing/invalid Cordis patch, invalid client/profile declaration, no DSH declaration, or an incomplete scan caused by limits or links;
@@ -138,7 +140,7 @@ Use `dsh-trust rules` for machine-readable rule metadata. Rule findings report o
 
 1. **Plugin Passport CLI** — implemented in `v0.1.0`.
 2. **Community Registry** — implemented in `v0.2.0` with GitHub Actions, Pages reports, badges, and contribution rules.
-3. **DSH integration** — implemented in `v0.3.0` with the external bundle, quarantine receipts/promotion, transactional snapshots, official disable/restore commands, and rollback.
+3. **DSH integration** — implemented in `v0.3.0` and hardened in `v0.3.1` with the external bundle, quarantine receipts/promotion, transactional snapshots, official disable/restore commands, and rollback.
 
 Specifications live in [`docs/specs`](docs/specs). The security boundary and explicit non-goals are documented in [`docs/threat-model.md`](docs/threat-model.md).
 

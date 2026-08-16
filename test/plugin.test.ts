@@ -32,7 +32,7 @@ describe('DSH bundle declaration', () => {
       types: './dist/plugin.d.ts',
       default: './dist/plugin.js',
     })
-    expect(manifest.version).toBe('0.3.0')
+    expect(manifest.version).toBe('0.3.1')
     expect(manifest.files).toContain('cordis.patch.yml')
     expect(manifest.peerDependencies).toEqual({
       '@deepseek-ai/cordis': '^4.0.1',
@@ -60,6 +60,10 @@ describe('DSH plugin lifecycle', () => {
       dependencies: { '@scope/example': '1.2.3' },
     }), 'utf8')
     await mkdir(join(home, 'snapshots', 'work', 'snapshot-1'), { recursive: true })
+    await mkdir(join(home, 'profiles', 'broken'), { recursive: true })
+    await writeFile(join(home, 'profiles', 'broken', 'package.json'), '{not-json', 'utf8')
+    await mkdir(join(home, 'profiles', 'nullish'), { recursive: true })
+    await writeFile(join(home, 'profiles', 'nullish', 'package.json'), 'null', 'utf8')
 
     interface Tool {
       name: string
@@ -102,7 +106,11 @@ describe('DSH plugin lifecycle', () => {
     const status = JSON.parse(statusText) as {
       profiles: Array<{ name: string; bundles: string[]; snapshots: string[] }>
     }
-    expect(status.profiles).toEqual([{ name: 'work', bundles: ['@scope/example'], snapshots: ['snapshot-1'] }])
+    expect(status.profiles).toEqual([
+      { name: 'broken', bundles: [], snapshots: [] },
+      { name: 'nullish', bundles: [], snapshots: [] },
+      { name: 'work', bundles: ['@scope/example'], snapshots: ['snapshot-1'] },
+    ])
     expect(statusText).not.toContain(home)
 
     dispose()

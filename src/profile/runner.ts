@@ -35,11 +35,13 @@ export async function runCommand(
   options: RunOptions = {},
 ): Promise<CommandResult> {
   return new Promise<CommandResult>((resolve, reject) => {
+    const useProcessGroup = process.platform !== 'win32'
     const child = spawn(command, args, {
       cwd: options.cwd,
       env: options.env ?? process.env,
       stdio: ['ignore', 'pipe', 'pipe'],
       shell: false,
+      detached: useProcessGroup,
     })
     let stdout = ''
     let stderr = ''
@@ -49,10 +51,42 @@ export async function runCommand(
     child.stderr.on('data', (chunk: string) => { stderr += chunk })
 
     let settled = false
-    const timer = options.timeoutMs === undefined ? undefined : setTimeout(() => {
+    let timer: NodeJS.Timeout | undefined
+    const signalHandlers = new Map<NodeJS.Signals, () => void>()
+    const removeSignalHandlers = () => {
+      for (const [signal, handler] of signalHandlers) process.off(signal, handler)
+      signalHandlers.clear()
+    }
+    const killChildTree = (signal: NodeJS.Signals) => {
+      if (useProcessGroup && child.pid !== undefined) {
+        try {
+          process.kill(-child.pid, signal)
+          return
+        } catch {
+          // Fall through to the direct-child path when the group vanished.
+        }
+      }
+      child.kill(signal)
+    }
+    if (useProcessGroup) {
+      for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) {
+        const handler = () => {
+          if (settled) return
+          settled = true
+          if (timer !== undefined) clearTimeout(timer)
+          removeSignalHandlers()
+          killChildTree(signal)
+          reject(new Error(`command terminated by ${signal}: ${describeCommand(command, args)}`))
+        }
+        signalHandlers.set(signal, handler)
+        process.once(signal, handler)
+      }
+    }
+    timer = options.timeoutMs === undefined ? undefined : setTimeout(() => {
       if (settled) return
       settled = true
-      child.kill('SIGKILL')
+      removeSignalHandlers()
+      killChildTree('SIGKILL')
       reject(new Error(`command timed out after ${options.timeoutMs}ms: ${describeCommand(command, args)}`))
     }, options.timeoutMs)
 
@@ -60,12 +94,14 @@ export async function runCommand(
       if (settled) return
       settled = true
       if (timer !== undefined) clearTimeout(timer)
+      removeSignalHandlers()
       reject(error)
     })
     child.on('close', (code, signal) => {
       if (settled) return
       settled = true
       if (timer !== undefined) clearTimeout(timer)
+      removeSignalHandlers()
       resolve({ exitCode: code ?? (signal === null ? 0 : 1), stdout, stderr })
     })
   })

@@ -100,6 +100,36 @@ describe('installQuarantine', () => {
     expect(await readdir(outside)).toEqual([])
   })
 
+  it('removes a newly created empty receipt directory when installation fails', async () => {
+    const receiptRoot = await root()
+    await expect(installQuarantine('npm:@scope/plugin@1.2.3', {
+      inspect: async () => passport('pass'),
+      run: async () => ({ code: 1, stdout: '', stderr: 'install failed' }),
+      makeTempHome: root,
+      receiptRoot,
+      id: () => 'q-failed',
+      now: () => '2026-08-16T00:00:00.000Z',
+      targetProfile: 'work',
+    })).rejects.toThrow('exit 1')
+
+    expect(await readdir(receiptRoot)).toEqual([])
+  })
+
+  it('removes the receipt directory when temporary-home creation fails', async () => {
+    const receiptRoot = await root()
+    await expect(installQuarantine('npm:@scope/plugin@1.2.3', {
+      inspect: async () => passport('pass'),
+      run: async () => ({ code: 0, stdout: '', stderr: '' }),
+      makeTempHome: async () => { throw new Error('temp home failed') },
+      receiptRoot,
+      id: () => 'q-home-failed',
+      now: () => '2026-08-16T00:00:00.000Z',
+      targetProfile: 'work',
+    })).rejects.toThrow('temp home failed')
+
+    expect(await readdir(receiptRoot)).toEqual([])
+  })
+
   it('executes dynamic verification only behind the explicit allow gate', async () => {
     const receiptRoot = await root()
     const isolatedHome = await root()

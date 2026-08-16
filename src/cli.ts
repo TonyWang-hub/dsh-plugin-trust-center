@@ -16,8 +16,9 @@ import { captureSnapshot, listSnapshots, restoreSnapshot } from './profile/snaps
 import { disableBundle } from './profile/disable.js'
 import { restoreProfile } from './profile/restore.js'
 import { appendLedger, findLatestEntry, loadLedger } from './profile/ledger.js'
-import { dshPathFromEnv, runCommand } from './profile/runner.js'
+import { dshPathFromEnv, dshRemoveCommand, runCommand } from './profile/runner.js'
 import type { CommandRunner } from './profile/runner.js'
+import { CommandFailedError, dshRunOptions } from './profile/transaction.js'
 import { installQuarantine, promoteQuarantine } from './quarantine.js'
 import type { Passport } from './model.js'
 
@@ -187,12 +188,27 @@ export async function runCli(
               ...(dependencies.now === undefined ? {} : { now: dependencies.now() }),
             }),
             restoreTarget: async (profile, snapshotId, packageName) => {
-              await runner(dshPath, ['plugin', '--profile', profile, 'remove', packageName], {
-                cwd: home,
-                env: { ...process.env, DSH_HOME: home },
-                timeoutMs: 120_000,
-              })
-              await restoreSnapshot({ home, profile, snapshotId })
+              const args = dshRemoveCommand(profile, packageName)
+              let removalError: unknown
+              try {
+                const removed = await runner(dshPath, args, dshRunOptions(home, undefined, 120_000))
+                if (removed.exitCode !== 0) removalError = new CommandFailedError(args, removed)
+              } catch (error) {
+                removalError = error
+              }
+              try {
+                await restoreSnapshot({ home, profile, snapshotId })
+              } catch (restoreError) {
+                if (removalError !== undefined) {
+                  throw new AggregateError(
+                    [removalError, restoreError],
+                    'promotion rollback cleanup and snapshot restore both failed',
+                    { cause: removalError },
+                  )
+                }
+                throw restoreError
+              }
+              if (removalError !== undefined) throw removalError
             },
             recordInstall: async (profile, receipt) => {
               await appendLedger(ledgerPath(home, profile), {

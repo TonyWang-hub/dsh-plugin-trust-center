@@ -125,9 +125,27 @@ export async function runMutation(
     }
     return { dryRun, snapshotId, commands }
   } catch (error) {
+    const rollbackErrors: unknown[] = []
     if (!dryRun && snapshotId !== '') {
-      await restoreSnapshot({ home: options.home, profile, snapshotId })
-      if (options.rollback !== undefined) await options.rollback()
+      try {
+        await restoreSnapshot({ home: options.home, profile, snapshotId })
+      } catch (rollbackError) {
+        rollbackErrors.push(rollbackError)
+      }
+      if (options.rollback !== undefined) {
+        try {
+          await options.rollback()
+        } catch (rollbackError) {
+          rollbackErrors.push(rollbackError)
+        }
+      }
+    }
+    if (rollbackErrors.length > 0) {
+      throw new AggregateError(
+        [error, ...rollbackErrors],
+        'profile mutation failed and rollback was incomplete',
+        { cause: error },
+      )
     }
     throw error
   }

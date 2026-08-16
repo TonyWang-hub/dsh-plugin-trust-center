@@ -145,6 +145,73 @@ describe('runCommand', () => {
     }
   })
 
+  it.skipIf(process.platform === 'win32')('kills the entire process group on timeout', async () => {
+    const home = await root()
+    const childScript = join(home, 'grandchild.mjs')
+    const parentScript = join(home, 'parent.mjs')
+    const marker = join(home, 'grandchild-finished')
+    try {
+      await writeFile(childScript, `
+        import { writeFile } from 'node:fs/promises'
+        await new Promise(resolve => setTimeout(resolve, 800))
+        await writeFile(${JSON.stringify(marker)}, 'survived')
+      `)
+      await writeFile(parentScript, `
+        import { spawn } from 'node:child_process'
+        spawn(process.execPath, [${JSON.stringify(childScript)}], { stdio: 'ignore' }).unref()
+        await new Promise(resolve => setTimeout(resolve, 6000))
+      `)
+
+      await expect(runCommand(process.execPath, [parentScript], {
+        cwd: home,
+        timeoutMs: 300,
+      })).rejects.toThrow(/timed out/)
+      await new Promise(resolve => setTimeout(resolve, 900))
+      await expect(readFile(marker)).rejects.toMatchObject({ code: 'ENOENT' })
+    } finally {
+      await rm(home, { recursive: true, force: true })
+    }
+  })
+
+  it.skipIf(process.platform === 'win32')('forwards termination signals to the detached process group', async () => {
+    const home = await root()
+    const childScript = join(home, 'signal-grandchild.mjs')
+    const parentScript = join(home, 'signal-parent.mjs')
+    const started = join(home, 'signal-grandchild-started')
+    const finished = join(home, 'signal-grandchild-finished')
+    try {
+      await writeFile(childScript, `
+        import { writeFile } from 'node:fs/promises'
+        await writeFile(${JSON.stringify(started)}, 'started')
+        await new Promise(resolve => setTimeout(resolve, 800))
+        await writeFile(${JSON.stringify(finished)}, 'survived')
+      `)
+      await writeFile(parentScript, `
+        import { spawn } from 'node:child_process'
+        spawn(process.execPath, [${JSON.stringify(childScript)}], { stdio: 'ignore' }).unref()
+        await new Promise(resolve => setTimeout(resolve, 6000))
+      `)
+      const running = runCommand(process.execPath, [parentScript], { cwd: home, timeoutMs: 3_000 })
+      void running.catch(() => undefined)
+      for (let attempt = 0; attempt < 50; attempt += 1) {
+        try {
+          await readFile(started)
+          break
+        } catch {
+          await new Promise(resolve => setTimeout(resolve, 20))
+        }
+      }
+      expect(await readFile(started, 'utf8')).toBe('started')
+
+      process.emit('SIGTERM')
+      await expect(running).rejects.toThrow('terminated by SIGTERM')
+      await new Promise(resolve => setTimeout(resolve, 900))
+      await expect(readFile(finished)).rejects.toMatchObject({ code: 'ENOENT' })
+    } finally {
+      await rm(home, { recursive: true, force: true })
+    }
+  })
+
   it('rejects when the dsh executable does not exist', async () => {
     await expect(runCommand('/nonexistent/dsh-missing', dshDumpConfigCommand('t')))
       .rejects.toThrow()

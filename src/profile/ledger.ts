@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { lstat, open, readFile, unlink } from 'node:fs/promises'
 import { validateProfileName } from './paths.js'
 import { writeFileAtomic } from './atomic.js'
 
@@ -78,21 +78,23 @@ export async function appendLedger(
     throw new Error('ledger entry requires a 64-hex passport digest')
   }
 
-  const existing = await loadLedger(path)
-  const version = (existing.entries[existing.entries.length - 1]?.version ?? 0) + 1
-  const entry: LedgerEntry = {
-    schemaVersion: LEDGER_SCHEMA_VERSION,
-    version,
-    action: input.action,
-    packageName: input.packageName,
-    spec: input.spec,
-    passportDigest: input.passportDigest,
-    profile,
-    installedAt: now.toISOString(),
-  }
-  const file: LedgerFile = { schemaVersion: LEDGER_SCHEMA_VERSION, entries: [...existing.entries, entry] }
-  await writeFileAtomic(path, `${JSON.stringify(file, null, 2)}\n`)
-  return entry
+  return withLedgerLock(path, async () => {
+    const existing = await loadLedger(path)
+    const version = (existing.entries[existing.entries.length - 1]?.version ?? 0) + 1
+    const entry: LedgerEntry = {
+      schemaVersion: LEDGER_SCHEMA_VERSION,
+      version,
+      action: input.action,
+      packageName: input.packageName,
+      spec: input.spec,
+      passportDigest: input.passportDigest,
+      profile,
+      installedAt: now.toISOString(),
+    }
+    const file: LedgerFile = { schemaVersion: LEDGER_SCHEMA_VERSION, entries: [...existing.entries, entry] }
+    await writeFileAtomic(path, `${JSON.stringify(file, null, 2)}\n`)
+    return entry
+  })
 }
 
 /** Reads and validates the ledger; a missing file reads as an empty ledger. */
@@ -195,6 +197,73 @@ function validateEntry(raw: unknown): LedgerEntry {
     passportDigest,
     profile,
     installedAt,
+  }
+}
+
+const LEDGER_LOCK_TIMEOUT_MS = 5_000
+const LEDGER_LOCK_STALE_MS = 30_000
+const LEDGER_LOCK_RETRY_MS = 10
+
+async function withLedgerLock<T>(path: string, operation: () => Promise<T>): Promise<T> {
+  const lockPath = `${path}.lock`
+  const deadline = Date.now() + LEDGER_LOCK_TIMEOUT_MS
+  let handle: Awaited<ReturnType<typeof open>> | undefined
+  while (handle === undefined) {
+    let candidate: Awaited<ReturnType<typeof open>> | undefined
+    try {
+      candidate = await open(lockPath, 'wx', 0o600)
+      await candidate.writeFile(`${String(process.pid)}\n`)
+      await candidate.sync()
+      handle = candidate
+    } catch (error) {
+      if (candidate !== undefined) {
+        await candidate.close().catch(() => undefined)
+        await unlink(lockPath).catch(() => undefined)
+      }
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error
+      try {
+        const info = await lstat(lockPath)
+        if (Date.now() - info.mtimeMs > LEDGER_LOCK_STALE_MS && !await lockOwnerIsAlive(lockPath)) {
+          try {
+            await unlink(lockPath)
+            continue
+          } catch (unlinkError) {
+            const code = (unlinkError as NodeJS.ErrnoException).code
+            if (code === 'ENOENT') continue
+            if (code !== 'EPERM') throw unlinkError
+          }
+        }
+      } catch (statError) {
+        if (!isEnoent(statError)) throw statError
+        continue
+      }
+      if (Date.now() >= deadline) throw new Error(`timed out waiting for ledger lock: ${lockPath}`)
+      await new Promise(resolve => setTimeout(resolve, LEDGER_LOCK_RETRY_MS))
+    }
+  }
+  try {
+    return await operation()
+  } finally {
+    await handle.close().catch(() => undefined)
+    await unlink(lockPath).catch(() => undefined)
+  }
+}
+
+async function lockOwnerIsAlive(lockPath: string): Promise<boolean> {
+  let text: string
+  try {
+    text = await readFile(lockPath, 'utf8')
+  } catch (error) {
+    if (isEnoent(error)) return false
+    throw error
+  }
+  const pid = Number(text.trim())
+  if (!Number.isSafeInteger(pid) || pid < 1) return false
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code !== 'ESRCH'
   }
 }
 

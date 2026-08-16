@@ -4,6 +4,21 @@ All notable changes are documented in this file.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-16
+
+### Fixed
+
+- Timed-out DSH commands now terminate their full POSIX process group so package-manager descendants cannot continue mutating a profile after rollback.
+- Ledger appends use a bounded cross-process lock, preventing concurrent writers from losing entries or reusing versions.
+- Mutation, restore, and promotion failures preserve the original error while reporting incomplete rollback work.
+- Profile restore protects its target snapshot when the 100-entry ring is full; failed quarantine installs remove newly created empty receipt directories.
+- Corrupt profile manifests no longer fail the complete read-only profile-status response, and promotion rollback checks official remove failures.
+
+### Verification
+
+- Dogfooding covered the pinned community Sentinel revision with static inspection, script-disabled isolated installation, and promotion dry-run without dynamic code execution.
+- Packed-bundle acceptance remains pinned to official `@deepseek-ai/dsh@0.1.0-rc.6`.
+
 ## [0.3.0] - 2026-08-16
 
 ### Added
@@ -48,7 +63,8 @@ All notable changes are documented in this file.
 - Manual-only, secret-free dynamic import verification workflow.
 - Least-privilege CI and checksummed GitHub Release automation.
 
-[Unreleased]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/releases/tag/v0.3.1
 [0.3.0]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/releases/tag/v0.3.0
 [0.2.0]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/releases/tag/v0.2.0
 [0.1.0]: https://github.com/TonyWang-hub/dsh-plugin-trust-center/releases/tag/v0.1.0

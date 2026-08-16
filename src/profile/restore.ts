@@ -8,6 +8,7 @@ import { dshAddCommand, dshDumpConfigCommand, dshRemoveCommand } from './runner.
 import type { CommandRunner } from './runner.js'
 import {
   DEFAULT_SNAPSHOT_RETENTION,
+  MAX_SNAPSHOT_RETENTION,
   captureSnapshot,
   listSnapshots,
   readSnapshotManifest,
@@ -82,12 +83,18 @@ export async function restoreProfile(options: RestoreProfileOptions): Promise<Re
   }
 
   const existing = await listSnapshots(options.home, profile)
-  const retention = Math.max(options.retention ?? DEFAULT_SNAPSHOT_RETENTION, existing.length + 1)
+  const requestedRetention = options.retention ?? DEFAULT_SNAPSHOT_RETENTION
+  if (!Number.isSafeInteger(requestedRetention)
+    || requestedRetention < 1 || requestedRetention > MAX_SNAPSHOT_RETENTION) {
+    throw new Error(`snapshot retention must be an integer between 1 and ${MAX_SNAPSHOT_RETENTION}`)
+  }
+  const retention = Math.min(MAX_SNAPSHOT_RETENTION, Math.max(requestedRetention, existing.length + 1))
   const rollbackSnapshotId = await captureSnapshot({
     home: options.home,
     profile,
     now: options.now ?? new Date(),
     retention,
+    preserveSnapshotIds: [snapshotId],
   })
   const runOptions = dshRunOptions(options.home, {
     ...options.env,
@@ -110,10 +117,28 @@ export async function restoreProfile(options: RestoreProfileOptions): Promise<Re
     const dumped = await options.runner(options.dshPath, dumpArgs, runOptions)
     if (dumped.exitCode !== 0) throw new CommandFailedError(dumpArgs, dumped)
   } catch (error) {
+    const rollbackErrors: unknown[] = []
     for (const packageName of attempted.reverse()) {
-      await options.runner(options.dshPath, dshRemoveCommand(profile, packageName), runOptions).catch(() => undefined)
+      const args = dshRemoveCommand(profile, packageName)
+      try {
+        const result = await options.runner(options.dshPath, args, runOptions)
+        if (result.exitCode !== 0) rollbackErrors.push(new CommandFailedError(args, result))
+      } catch (rollbackError) {
+        rollbackErrors.push(rollbackError)
+      }
     }
-    await restoreSnapshot({ home: options.home, profile, snapshotId: rollbackSnapshotId })
+    try {
+      await restoreSnapshot({ home: options.home, profile, snapshotId: rollbackSnapshotId })
+    } catch (rollbackError) {
+      rollbackErrors.push(rollbackError)
+    }
+    if (rollbackErrors.length > 0) {
+      throw new AggregateError(
+        [error, ...rollbackErrors],
+        'profile restore failed and rollback was incomplete',
+        { cause: error },
+      )
+    }
     throw error
   }
 

@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, stat, unlink, utimes, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -62,6 +62,53 @@ describe('appendLedger', () => {
 
       const ledger = await loadLedger(path)
       expect(ledger.entries.map(entry => entry.version)).toEqual([1, 2])
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('serializes concurrent appends without losing entries or versions', async () => {
+    const dir = await root()
+    try {
+      const path = join(dir, 'trust-ledger.json')
+      await Promise.all(Array.from({ length: 12 }, async (_, index) => appendLedger(path, {
+        action: 'install',
+        packageName: `plugin-${String(index)}`,
+        spec: `plugin-${String(index)}@1.0.0`,
+        passportDigest: index.toString(16).padStart(64, '0'),
+        profile: 'p1',
+      }, new Date(NOW))))
+
+      const ledger = await loadLedger(path)
+      expect(ledger.entries).toHaveLength(12)
+      expect(ledger.entries.map(entry => entry.version)).toEqual(Array.from({ length: 12 }, (_, index) => index + 1))
+      expect(ledger.entries.map(entry => entry.packageName).sort()).toEqual(
+        Array.from({ length: 12 }, (_, index) => `plugin-${String(index)}`).sort(),
+      )
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('does not evict an old lock while its owner process is still alive', async () => {
+    const dir = await root()
+    try {
+      const path = join(dir, 'trust-ledger.json')
+      const lockPath = `${path}.lock`
+      await writeFile(lockPath, `${String(process.pid)}\n`, { mode: 0o600 })
+      const old = new Date(Date.now() - 60_000)
+      await utimes(lockPath, old, old)
+      let settled = false
+      const append = appendLedger(path, {
+        action: 'install', packageName: 'a', spec: 'a@1.0.0',
+        passportDigest: 'a'.repeat(64), profile: 'p1',
+      }, new Date(NOW)).finally(() => { settled = true })
+      void append.catch(() => undefined)
+
+      await new Promise(resolve => setTimeout(resolve, 100))
+      expect(settled).toBe(false)
+      await unlink(lockPath)
+      await expect(append).resolves.toMatchObject({ version: 1, packageName: 'a' })
     } finally {
       await rm(dir, { recursive: true, force: true })
     }
